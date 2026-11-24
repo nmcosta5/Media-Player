@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  AudioLines, ChevronDown, CircleHelp, Disc3, FileAudio, FileVideo, FolderOpen,
+  AudioLines, ChevronDown, CircleHelp, Disc3, FileVideo, FolderOpen,
   Heart, ListMusic, Maximize, Minimize, MoreHorizontal, Music2, Pause, Play,
-  Plus, Repeat, Search, SkipBack, SkipForward, SlidersHorizontal, Volume2,
+  Plus, Repeat, Search, SkipBack, SkipForward, Volume2,
   VolumeX, X, Shuffle, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 
@@ -272,7 +272,6 @@ export default function App() {
       {dragging && <div className="drop-overlay"><div><FolderOpen size={34}/><strong>Drop your media here</strong><span>Audio and video files are supported</span></div></div>}
       <input ref={fileInputRef} type="file" accept="audio/*,video/*,.mkv,.flac,.avi" multiple hidden onChange={(e) => {addTracks(Array.from(e.target.files ?? []));e.target.value="";}}/>
       {current?.kind === "audio" && <audio ref={mediaRef as React.RefObject<HTMLAudioElement>} key={current.id} src={current.url} />}
-      {current?.kind === "video" && <video ref={mediaRef as React.RefObject<HTMLVideoElement>} key={current.id} src={current.url} className="audio-hidden" />}
     </div>
   );
 }
