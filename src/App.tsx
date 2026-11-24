@@ -6,6 +6,7 @@ import {
   VolumeX, X, Shuffle, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
 
+type MediaFile = { name: string; path: string; url: string };
 type Track = { id: string; name: string; url: string; path?: string; kind: "audio" | "video"; duration?: number };
 type View = "home" | "library" | "playlist" | "favorites";
 
