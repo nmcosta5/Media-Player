@@ -10,12 +10,14 @@ contextBridge.exposeInMainWorld("merci", {
   maximize: (): Promise<boolean> => ipcRenderer.invoke("window:maximize"),
   close: (): Promise<void> => ipcRenderer.invoke("window:close"),
   onMenu: (callback: (action: string) => void) => {
-    const listener = (_event: Electron.IpcRendererEvent, action: string) => callback(action);
+    const listeners = new Map<string, (_event: Electron.IpcRendererEvent) => void>();
     for (const action of ["open", "open-multiple", "play-pause", "stop", "fullscreen"]) {
+      const listener = () => callback(action);
+      listeners.set(action, listener);
       ipcRenderer.on("menu:" + action, listener);
     }
     return () => {
-      for (const action of ["open", "open-multiple", "play-pause", "stop", "fullscreen"]) {
+      for (const [action, listener] of listeners) {
         ipcRenderer.removeListener("menu:" + action, listener);
       }
     };
