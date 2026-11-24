@@ -36,8 +36,8 @@ npm run dist:win
 ```
 
 The `release/` directory contains:
-- `Merci Player-1.0.0-x64.exe` — Windows installer
-- `Merci Player-1.0.0-x64.exe` — portable target (electron-builder names may be differentiated by target metadata)
+- `Merci Player-1.0.0-Setup-x64.exe` — Windows installer
+- `Merci Player-1.0.0-Portable-x64.exe` — portable executable
 
 For a directory build without an installer:
 
