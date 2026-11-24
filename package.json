@@ -63,7 +63,11 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Merci Player"
+      "shortcutName": "Merci Player",
+      "artifactName": "${productName}-${version}-Setup-${arch}.${ext}"
+    },
+    "portable": {
+      "artifactName": "${productName}-${version}-Portable-${arch}.${ext}"
     }
   }
 }
