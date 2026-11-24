@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines, ChevronDown, CircleHelp, Disc3, FileVideo, FolderOpen,
-  Heart, ListMusic, Maximize, Minimize, MoreHorizontal, Music2, Pause, Play,
+  Heart, ListMusic, Maximize, MoreHorizontal, Music2, Pause, Play,
   Plus, Repeat, Search, SkipBack, SkipForward, Volume2,
   VolumeX, X, Shuffle, PanelLeftClose, PanelLeftOpen
 } from "lucide-react";
@@ -153,11 +153,6 @@ export default function App() {
       <header className="topbar">
         <div className="brand"><div className="brand-mark"><AudioLines size={17} /></div><span>merci<span className="brand-light"> player</span></span></div>
         <div className="window-caption">A quieter way to listen</div>
-        <div className="window-actions">
-          <button className="window-btn" aria-label="Minimize" onClick={() => void window.merci?.minimize()}><Minimize size={13}/></button>
-          <button className="window-btn" aria-label="Maximize" onClick={() => void window.merci?.maximize()}><Maximize size={12}/></button>
-          <button className="window-btn close" aria-label="Close" onClick={() => void window.merci?.close()}><X size={14}/></button>
-        </div>
       </header>
 
       <div className="workspace">
