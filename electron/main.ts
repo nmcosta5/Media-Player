@@ -80,6 +80,8 @@ type LyricsRecord = {
 const lyricsDirectory = () => path.join(app.getPath("documents"), "MerciPlayer", "Lyrics");
 const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"\\|?*\x00-\x1f]/g, "_").replace(/\//g, "_").replace(/[. ]+$/g, "").trim().slice(0, 90) || "Unknown";
 const lyricsHeaders = { "User-Agent": "MerciPlayer/1.0 (https://github.com/nmcosta5/Media-Player)", "Accept": "application/json" };
+let lyricsRequestTail: Promise<void> = Promise.resolve();
+let lyricsLastRequestAt = 0;
 
 async function getLyricsForTrack(input: { title: string; artist?: string; album?: string; duration?: number }) {
   const title = input.title.trim().slice(0, 240);
@@ -99,15 +101,22 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
     if (syncedLyrics || plainLyrics) return { status: "cached", trackName: title, artistName: artist, albumName: album, syncedLyrics, plainLyrics, savedPath: directory, source: "Local lyrics cache" };
   } catch { /* A missing Documents folder is created after a successful download. */ }
   const request = async (url: URL): Promise<{response: Response; data: unknown}> => {
-    const response = await fetch(url, { headers: lyricsHeaders, signal: AbortSignal.timeout(15000) });
-    if (!response.ok && response.status !== 404) {
-      if (response.status === 429) {
-        const retryAfter = Number(response.headers.get("retry-after") || 30);
-        throw Object.assign(new Error("LRCLIB rate limit reached. Try again shortly."), { retryAfter: Number.isFinite(retryAfter) ? retryAfter : 30 });
+    const task = lyricsRequestTail.then(async () => {
+      const delay = Math.max(0, 300 - (Date.now() - lyricsLastRequestAt));
+      if (delay > 0) await new Promise<void>(resolve => setTimeout(resolve, delay));
+      lyricsLastRequestAt = Date.now();
+      const response = await fetch(url, { headers: lyricsHeaders, signal: AbortSignal.timeout(15000) });
+      if (!response.ok && response.status !== 404) {
+        if (response.status === 429) {
+          const retryAfter = Number(response.headers.get("retry-after") || 30);
+          throw Object.assign(new Error("LRCLIB rate limit reached. Try again shortly."), { retryAfter: Number.isFinite(retryAfter) ? retryAfter : 30 });
+        }
+        throw new Error("LRCLIB returned HTTP " + response.status);
       }
-      throw new Error("LRCLIB returned HTTP " + response.status);
-    }
-    return { response, data: response.ok ? await response.json() as unknown : null };
+      return { response, data: response.ok ? await response.json() as unknown : null };
+    });
+    lyricsRequestTail = task.then(() => undefined, () => undefined);
+    return task;
   };
   let record: LyricsRecord | null = null;
   try {
