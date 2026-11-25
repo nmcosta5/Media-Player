@@ -4,6 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main, master]
+    tags: ["v*"]
     paths:
       - "src/**"
       - "electron/**"
@@ -12,7 +13,7 @@ on:
       - ".github/workflows/build-windows.yml"
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   windows:
@@ -24,6 +25,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: ""
       - name: Install dependencies
         run: npm install
       - name: Build installer and portable executable
@@ -35,3 +37,10 @@ jobs:
           path: release/*.exe
           if-no-files-found: error
           retention-days: 30
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Merci Player ${{ github.ref_name }}
+          generate_release_notes: true
+          files: release/*.exe
