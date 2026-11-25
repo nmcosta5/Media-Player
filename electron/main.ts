@@ -4,6 +4,8 @@ import { parseFile } from "music-metadata";
 import path from "node:path";
 
 const isDev = !app.isPackaged;
+app.setName("Merci Player");
+if (process.platform === "win32") app.setAppUserModelId("com.merciplayer.desktop");
 let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
