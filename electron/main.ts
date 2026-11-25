@@ -130,13 +130,14 @@ app.whenReady().then(() => {
   const template: Electron.MenuItemConstructorOptions[] = [
     { label: "File", submenu: [
       { label: "Open file…", accelerator: "CmdOrCtrl+O", click: () => mainWindow?.webContents.send("menu:open") },
-      { label: "Open multiple files…", accelerator: "CmdOrCtrl+Shift+O", click: () => mainWindow?.webContents.send("menu:open-multiple") },
+      { label: "Open folder / scan…", accelerator: "CmdOrCtrl+Shift+O", click: () => mainWindow?.webContents.send("menu:open-folder") },
+      { label: "Open multiple files…", accelerator: "CmdOrCtrl+Alt+O", click: () => mainWindow?.webContents.send("menu:open-multiple") },
       { type: "separator" }, { role: "quit" }
     ]},
     { label: "Playback", submenu: [
-      { label: "Play / Pause", accelerator: "Space", click: () => mainWindow?.webContents.send("menu:play-pause") },
-      { label: "Stop", accelerator: "S", click: () => mainWindow?.webContents.send("menu:stop") },
-      { label: "Fullscreen", accelerator: "F", click: () => mainWindow?.webContents.send("menu:fullscreen") }
+      { label: "Play / Pause", click: () => mainWindow?.webContents.send("menu:play-pause") },
+      { label: "Stop", click: () => mainWindow?.webContents.send("menu:stop") },
+      { label: "Fullscreen", click: () => mainWindow?.webContents.send("menu:fullscreen") }
     ]},
     { label: "Help", submenu: [
       { label: "About Merci Player", click: () => dialog.showMessageBox({ title: "Merci Player", message: "Merci Player", detail: "A focused, modern media experience. Version " + app.getVersion(), buttons: ["Close"] }) }
