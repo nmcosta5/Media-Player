@@ -78,7 +78,7 @@ type LyricsRecord = {
   duration?: number; instrumental?: boolean; plainLyrics?: string | null; syncedLyrics?: string | null;
 };
 const lyricsDirectory = () => path.join(app.getPath("documents"), "MerciPlayer", "Lyrics");
-const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"/\\\\|?*\\x00-\\x1f]/g, "_").replace(/[. ]+$/g, "").trim().slice(0, 90) || "Unknown";
+const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[. ]+$/g, "").trim().slice(0, 90) || "Unknown";
 const lyricsHeaders = { "User-Agent": "MerciPlayer/1.0 (https://github.com/nmcosta5/Media-Player)", "Accept": "application/json" };
 
 async function getLyricsForTrack(input: { title: string; artist?: string; album?: string; duration?: number }) {
@@ -148,7 +148,13 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
 }
 app.whenReady().then(() => {
   ipcMain.handle("media:open", () => chooseMedia(true));
-  ipcMain.handle("lyrics:get", async (_event, input: unknown) => {\n    if (!input || typeof input !== "object") return { status: "invalid", message: "Invalid lyrics request." };\n    const value = input as Record<string, unknown>;\n    if (typeof value.title !== "string" || value.title.length > 240 || (value.artist !== undefined && typeof value.artist !== "string") || (value.album !== undefined && typeof value.album !== "string")) return { status: "invalid", message: "Invalid track information." };\n    return getLyricsForTrack({ title: value.title, artist: typeof value.artist === "string" ? value.artist : undefined, album: typeof value.album === "string" ? value.album : undefined, duration: typeof value.duration === "number" ? value.duration : undefined });\n  });\n  ipcMain.handle("media:metadata", async (_event, filePath: string) => {
+  ipcMain.handle("lyrics:get", async (_event, input: unknown) => {
+    if (!input || typeof input !== "object") return { status: "invalid", message: "Invalid lyrics request." };
+    const value = input as Record<string, unknown>;
+    if (typeof value.title !== "string" || value.title.length > 240 || (value.artist !== undefined && typeof value.artist !== "string") || (value.album !== undefined && typeof value.album !== "string")) return { status: "invalid", message: "Invalid track information." };
+    return getLyricsForTrack({ title: value.title, artist: typeof value.artist === "string" ? value.artist : undefined, album: typeof value.album === "string" ? value.album : undefined, duration: typeof value.duration === "number" ? value.duration : undefined });
+  });
+  ipcMain.handle("media:metadata", async (_event, filePath: string) => {
     try {
       const metadata = await parseFile(filePath);
       const picture = metadata.common.picture?.[0];
