@@ -13,6 +13,7 @@ function createWindow() {
     minHeight: 620,
     backgroundColor: "#0b0c0e",
     title: "Merci Player",
+    icon: path.join(__dirname, "../build/icon.ico"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
