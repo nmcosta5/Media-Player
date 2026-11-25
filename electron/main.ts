@@ -31,7 +31,7 @@ function createWindow() {
   mainWindow.on("closed", () => { mainWindow = null; });
 }
 
-const mediaExtensions = new Set(["mp4","mkv","avi","mov","webm","m4v","mp3","wav","flac","aac","ogg","m4a","wma","png","jpg","jpeg","gif","webp","bmp","avif","svg"]);
+const mediaExtensions = new Set(["mp4","mkv","avi","mov","webm","m4v","mp3","wav","flac","aac","ogg","m4a","wma","png","jpg","jpeg","gif","webp","bmp","avif","svg","svg"]);
 const supportedMedia = (filePath: string) => mediaExtensions.has(path.extname(filePath).slice(1).toLowerCase());
 const asMediaFile = (filePath: string) => ({ name: path.basename(filePath), path: filePath, url: pathToFileURL(filePath).href });
 
