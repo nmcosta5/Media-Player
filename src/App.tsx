@@ -66,7 +66,7 @@ const seek=(value:number)=>{const target=media.current;const safe=Math.max(0,Mat
  useEffect(()=>{let cancelled=false;const pending=items.filter(item=>item.kind==="audio"&&item.path&&!item.metadataLoaded).slice(0,120);for(const item of pending){if(!window.merci)break;void window.merci.getMetadata(item.path!).then(info=>{if(cancelled)return;setItems(old=>old.map(entry=>entry.id===item.id?{...entry,info,thumbnail:info?.artwork??entry.thumbnail,metadataLoaded:true}:entry));}).catch(()=>{if(!cancelled)setItems(old=>old.map(entry=>entry.id===item.id?{...entry,metadataLoaded:true}:entry));});}return()=>{cancelled=true;};},[items]);
  useEffect(()=>{
  const track=active;
- if(!track||track.kind!=="audio"||(track.path&&!track.metadataLoaded)){setLyricsData(null);setLyricsLoading(false);return;}
+ if(!track||track.kind!=="audio"||(track.path&&!track.metadataLoaded)){lyricsRequestKey.current="";setLyricsData(null);setLyricsLoading(false);return;}
  const title=(track.info?.title||track.name.replace(/\.[^.]+$/,"")).trim();
  const artist=(track.info?.artist||"").trim();
  const album=(track.info?.album||"").trim();
