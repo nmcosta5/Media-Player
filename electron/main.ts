@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import { pathToFileURL } from "node:url";
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { parseFile } from "music-metadata";
 import path from "node:path";
 
@@ -119,6 +119,27 @@ app.whenReady().then(() => {
       const subtitlePath = path.join(directory, match.name);
       return { name: match.name, content: await readFile(subtitlePath, "utf8"), path: subtitlePath };
     } catch { return null; }
+  });
+  ipcMain.handle("media:save-snapshot", async (_event, dataUrl: unknown, suggestedName: unknown) => {
+    if (typeof dataUrl !== "string" || dataUrl.length > 32_000_000) throw new Error("Snapshot image is too large or invalid.");
+    const match = dataUrl.match(/^data:image\/(png|jpeg);base64,([A-Za-z0-9+/=]+)$/);
+    if (!match) throw new Error("Only PNG and JPEG snapshots are supported.");
+    const extension = match[1] === "jpeg" ? "jpg" : "png";
+    const baseName = typeof suggestedName === "string" ? path.basename(suggestedName).replace(/[^a-z0-9._-]/gi, "_").slice(0, 80) : "Merci-Player-Snapshot";
+    const result = await dialog.showSaveDialog({
+      title: "Save video snapshot",
+      defaultPath: path.join(app.getPath("pictures"), (path.parse(baseName).name || "Merci-Player-Snapshot") + "." + extension),
+      filters: [{ name: extension.toUpperCase() + " image", extensions: [extension] }]
+    });
+    if (result.canceled || !result.filePath) return { canceled: true };
+    await writeFile(result.filePath, Buffer.from(match[2], "base64"));
+    return { canceled: false, filePath: result.filePath };
+  });
+  ipcMain.handle("window:always-on-top", (_event, enabled: unknown) => {
+    if (!mainWindow) return false;
+    const value = enabled === true;
+    mainWindow.setAlwaysOnTop(value);
+    return mainWindow.isAlwaysOnTop();
   });
   ipcMain.handle("window:minimize", () => mainWindow?.minimize());
   ipcMain.handle("window:maximize", () => {
