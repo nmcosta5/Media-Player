@@ -1,4 +1,5 @@
 name: Build Merci Player for Windows
+# Feature branch CI includes VLC-style UI and Windows media-session changes.
 
 on:
   workflow_dispatch:
