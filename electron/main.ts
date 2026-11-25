@@ -111,7 +111,7 @@ app.whenReady().then(() => {
     try {
       const entries = await readdir(directory, { withFileTypes: true });
       const match = entries.find(entry => {
-        if (!entry.isFile() || !/\\.(srt|vtt)$/i.test(entry.name)) return false;
+        if (!entry.isFile() || ![".srt", ".vtt"].includes(path.extname(entry.name).toLowerCase())) return false;
         const candidate = path.basename(entry.name, path.extname(entry.name)).toLowerCase();
         return candidate === base || candidate.startsWith(base + ".");
       });
