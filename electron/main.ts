@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import { pathToFileURL } from "node:url";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { parseFile } from "music-metadata";
 import path from "node:path";
 
@@ -30,23 +31,46 @@ function createWindow() {
   mainWindow.on("closed", () => { mainWindow = null; });
 }
 
+const mediaExtensions = new Set(["mp4","mkv","avi","mov","webm","m4v","mp3","wav","flac","aac","ogg","m4a","wma","png","jpg","jpeg","gif","webp","bmp","avif","svg","svg"]);
+const supportedMedia = (filePath: string) => mediaExtensions.has(path.extname(filePath).slice(1).toLowerCase());
+const asMediaFile = (filePath: string) => ({ name: path.basename(filePath), path: filePath, url: pathToFileURL(filePath).href });
+
+async function scanDirectory(root: string) {
+  const found: ReturnType<typeof asMediaFile>[] = [];
+  const pending = [root];
+  const maxFiles = 12000;
+  while (pending.length && found.length < maxFiles) {
+    const current = pending.pop()!;
+    let entries;
+    try { entries = await readdir(current, { withFileTypes: true }); } catch { continue; }
+    for (const entry of entries) {
+      const fullPath = path.join(current, entry.name);
+      if (entry.isDirectory()) {
+        if (!entry.name.startsWith(".") && entry.name !== "node_modules" && entry.name !== "$RECYCLE.BIN") pending.push(fullPath);
+      } else if (entry.isFile() && supportedMedia(fullPath)) {
+        found.push(asMediaFile(fullPath));
+        if (found.length >= maxFiles) break;
+      }
+    }
+  }
+  return found;
+}
+
 async function chooseMedia(multiple = true) {
   const result = await dialog.showOpenDialog({
     title: "Open media",
     properties: multiple ? ["openFile", "multiSelections"] : ["openFile"],
     filters: [
       { name: "Supported media", extensions: [
-        "mp4","mkv","avi","mov","webm","m4v",
-        "mp3","wav","flac","aac","ogg","m4a","wma",
-        "png","jpg","jpeg","gif","webp","bmp","avif"
+        "mp4","mkv","avi","mov","webm","m4v","mpg","mpeg","wmv","ts",
+        "mp3","wav","flac","aac","ogg","m4a","wma","aiff","opus",
+        "png","jpg","jpeg","gif","webp","bmp","avif","svg"
       ] },
       { name: "All files", extensions: ["*"] }
     ]
   });
   if (result.canceled) return [];
-  return result.filePaths.map(filePath => ({
-    name: path.basename(filePath), path: filePath, url: pathToFileURL(filePath).href
-  }));
+  return result.filePaths.map(asMediaFile);
 }
 
 app.whenReady().then(() => {
@@ -68,8 +92,33 @@ app.whenReady().then(() => {
   });
   ipcMain.handle("media:open-one", () => chooseMedia(false));
   ipcMain.handle("media:open-folder", async () => {
-    const result = await dialog.showOpenDialog({ title: "Choose a folder", properties: ["openDirectory"] });
-    return result.canceled ? [] : [result.filePaths[0]];
+    const result = await dialog.showOpenDialog({ title: "Scan media folder", properties: ["openDirectory"] });
+    return result.canceled ? [] : scanDirectory(result.filePaths[0]);
+  });
+  ipcMain.handle("media:restore-files", async (_event, paths: unknown) => {
+    if (!Array.isArray(paths)) return [];
+    const safePaths = paths.filter((value): value is string => typeof value === "string" && value.length < 4096).slice(0, 100);
+    const restored: ReturnType<typeof asMediaFile>[] = [];
+    for (const filePath of safePaths) {
+      try { if (supportedMedia(filePath) && (await stat(filePath)).isFile()) restored.push(asMediaFile(filePath)); } catch { /* Skip unavailable files. */ }
+    }
+    return restored;
+  });
+  ipcMain.handle("media:find-subtitle", async (_event, filePath: unknown) => {
+    if (typeof filePath !== "string" || filePath.length > 4096) return null;
+    const directory = path.dirname(filePath);
+    const base = path.basename(filePath, path.extname(filePath)).toLowerCase();
+    try {
+      const entries = await readdir(directory, { withFileTypes: true });
+      const match = entries.find(entry => {
+        if (!entry.isFile() || ![".srt", ".vtt"].includes(path.extname(entry.name).toLowerCase())) return false;
+        const candidate = path.basename(entry.name, path.extname(entry.name)).toLowerCase();
+        return candidate === base || candidate.startsWith(base + ".");
+      });
+      if (!match) return null;
+      const subtitlePath = path.join(directory, match.name);
+      return { name: match.name, content: await readFile(subtitlePath, "utf8"), path: subtitlePath };
+    } catch { return null; }
   });
   ipcMain.handle("window:minimize", () => mainWindow?.minimize());
   ipcMain.handle("window:maximize", () => {
