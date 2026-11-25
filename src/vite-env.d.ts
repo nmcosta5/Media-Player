@@ -8,7 +8,9 @@ declare global {
       openFiles: () => Promise<MediaFile[]>;
       getMetadata: (filePath: string) => Promise<{title:string|null;artist:string|null;album:string|null;year:number|null;artwork:string|null;duration:number|null;bitrate:number|null}|null>;
       openOne: () => Promise<MediaFile[]>;
-      openFolder: () => Promise<string[]>;
+      openFolder: () => Promise<MediaFile[]>;
+      restoreFiles: (paths: string[]) => Promise<MediaFile[]>;
+      findSubtitle: (filePath: string) => Promise<{name:string;content:string;path:string}|null>;
       minimize: () => Promise<void>;
       maximize: () => Promise<boolean>;
       close: () => Promise<void>;
