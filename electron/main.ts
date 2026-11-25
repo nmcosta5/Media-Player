@@ -62,9 +62,9 @@ async function chooseMedia(multiple = true) {
     properties: multiple ? ["openFile", "multiSelections"] : ["openFile"],
     filters: [
       { name: "Supported media", extensions: [
-        "mp4","mkv","avi","mov","webm","m4v",
-        "mp3","wav","flac","aac","ogg","m4a","wma",
-        "png","jpg","jpeg","gif","webp","bmp","avif"
+        "mp4","mkv","avi","mov","webm","m4v","mpg","mpeg","wmv","ts",
+        "mp3","wav","flac","aac","ogg","m4a","wma","aiff","opus",
+        "png","jpg","jpeg","gif","webp","bmp","avif","svg"
       ] },
       { name: "All files", extensions: ["*"] }
     ]
