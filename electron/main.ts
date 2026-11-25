@@ -1,5 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import { pathToFileURL } from "node:url";
+import { parseFile } from "music-metadata";
 import path from "node:path";
 
 const isDev = !app.isPackaged;
@@ -48,6 +49,21 @@ async function chooseMedia(multiple = true) {
 
 app.whenReady().then(() => {
   ipcMain.handle("media:open", () => chooseMedia(true));
+  ipcMain.handle("media:metadata", async (_event, filePath: string) => {
+    try {
+      const metadata = await parseFile(filePath);
+      const picture = metadata.common.picture?.[0];
+      return {
+        title: metadata.common.title ?? null,
+        artist: metadata.common.artist ?? metadata.common.artists?.join(", ") ?? null,
+        album: metadata.common.album ?? null,
+        year: metadata.common.year ?? null,
+        artwork: picture ? `data:${picture.format};base64,${Buffer.from(picture.data).toString("base64")}` : null,
+        duration: metadata.format.duration ?? null,
+        bitrate: metadata.format.bitrate ?? null
+      };
+    } catch { return null; }
+  });
   ipcMain.handle("media:open-one", () => chooseMedia(false));
   ipcMain.handle("media:open-folder", async () => {
     const result = await dialog.showOpenDialog({ title: "Choose a folder", properties: ["openDirectory"] });
