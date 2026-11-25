@@ -7,31 +7,19 @@ let mainWindow: BrowserWindow | null = null;
 
 function createWindow() {
   mainWindow = new BrowserWindow({
-    width: 1440,
-    height: 900,
-    minWidth: 900,
-    minHeight: 620,
-    backgroundColor: "#0b0c0e",
-    title: "Merci Player",
+    width: 1440, height: 900, minWidth: 760, minHeight: 560,
+    backgroundColor: "#08090a", title: "Merci Player",
     icon: path.join(__dirname, "../build/icon.ico"),
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: false
+      contextIsolation: true, nodeIntegration: false, sandbox: false
     },
     titleBarStyle: "hidden",
-    titleBarOverlay: {
-      color: "#101113",
-      symbolColor: "#a8a9ad",
-      height: 38
-    }
+    titleBarOverlay: { color: "#17191b", symbolColor: "#c6c8ca", height: 42 }
   });
-
   if (isDev) mainWindow.loadURL("http://127.0.0.1:5173");
   else mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
-
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
     if (url.startsWith("https://")) shell.openExternal(url);
     return { action: "deny" };
@@ -44,15 +32,17 @@ async function chooseMedia(multiple = true) {
     title: "Open media",
     properties: multiple ? ["openFile", "multiSelections"] : ["openFile"],
     filters: [
-      { name: "Media files", extensions: ["mp4", "mkv", "avi", "mov", "webm", "m4v", "mp3", "wav", "flac", "aac", "ogg", "m4a", "wma"] },
+      { name: "Supported media", extensions: [
+        "mp4","mkv","avi","mov","webm","m4v",
+        "mp3","wav","flac","aac","ogg","m4a","wma",
+        "png","jpg","jpeg","gif","webp","bmp","avif"
+      ] },
       { name: "All files", extensions: ["*"] }
     ]
   });
   if (result.canceled) return [];
-  return result.filePaths.map((filePath) => ({
-    name: path.basename(filePath),
-    path: filePath,
-    url: pathToFileURL(filePath).href
+  return result.filePaths.map(filePath => ({
+    name: path.basename(filePath), path: filePath, url: pathToFileURL(filePath).href
   }));
 }
 
@@ -66,18 +56,15 @@ app.whenReady().then(() => {
   ipcMain.handle("window:minimize", () => mainWindow?.minimize());
   ipcMain.handle("window:maximize", () => {
     if (!mainWindow) return false;
-    if (mainWindow.isMaximized()) mainWindow.unmaximize();
-    else mainWindow.maximize();
+    if (mainWindow.isMaximized()) mainWindow.unmaximize(); else mainWindow.maximize();
     return mainWindow.isMaximized();
   });
   ipcMain.handle("window:close", () => mainWindow?.close());
-
   const template: Electron.MenuItemConstructorOptions[] = [
     { label: "File", submenu: [
       { label: "Open file…", accelerator: "CmdOrCtrl+O", click: () => mainWindow?.webContents.send("menu:open") },
       { label: "Open multiple files…", accelerator: "CmdOrCtrl+Shift+O", click: () => mainWindow?.webContents.send("menu:open-multiple") },
-      { type: "separator" },
-      { role: "quit" }
+      { type: "separator" }, { role: "quit" }
     ]},
     { label: "Playback", submenu: [
       { label: "Play / Pause", accelerator: "Space", click: () => mainWindow?.webContents.send("menu:play-pause") },
@@ -92,5 +79,4 @@ app.whenReady().then(() => {
   createWindow();
   app.on("activate", () => { if (BrowserWindow.getAllWindows().length === 0) createWindow(); });
 });
-
 app.on("window-all-closed", () => { if (process.platform !== "darwin") app.quit(); });
