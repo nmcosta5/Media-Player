@@ -269,3 +269,15 @@ body{min-width:760px}
 .control-group.right .volume{margin-right:4px}
 @media(max-width:900px){.control-group.right{gap:0}.control-group.right .icon-button{width:30px;height:32px}.info-popover,.settings-popover,.equalizer-popover{right:10px;bottom:90px}}
 @media(max-width:700px){.info-popover{width:min(340px,calc(100% - 20px))}.control-group.right .volume input{width:48px}}
+
+/* Discoverable keyboard reference */
+.shortcuts-backdrop{position:fixed;z-index:60;inset:0;display:grid;place-items:center;padding:18px;background:#030608c9;backdrop-filter:blur(8px)}
+.shortcuts-dialog{width:min(680px,94vw);max-height:min(780px,88vh);display:flex;flex-direction:column;overflow:hidden;padding:19px;border:1px solid #3c474e;border-radius:10px;background:#171e23;box-shadow:0 28px 100px #000e}
+.shortcuts-dialog>header{display:flex;align-items:center;justify-content:space-between;padding-bottom:14px;border-bottom:1px solid #313b42}
+.shortcuts-dialog>header span{display:block;color:#9ca7ad;font:9px var(--mono);letter-spacing:1.3px}
+.shortcuts-dialog>header strong{display:block;margin-top:5px;color:#f3f5f6;font:700 19px Manrope,sans-serif}
+.shortcut-list{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;overflow:auto;padding-top:9px}
+.shortcut-item{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 2px;border-bottom:1px solid #293239}
+.shortcut-item kbd{min-width:max-content;padding:4px 7px;border:1px solid #3b464d;border-radius:4px;background:#252f36;color:#f0f3f4;font:10px var(--mono)}
+.shortcut-item span{color:#c0c9ce;text-align:right;font-size:10px}
+@media(max-width:590px){.shortcut-list{grid-template-columns:1fr}.shortcuts-dialog{max-height:92vh;padding:13px}}
