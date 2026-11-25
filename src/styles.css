@@ -290,3 +290,47 @@ body{min-width:760px}
 .library-filters>label{display:flex;align-items:center;gap:8px;color:#99a4ab;font-size:10px}
 .library-filters select{padding:7px 8px;border:1px solid #333e45;border-radius:4px;background:#1b2328;color:#dce2e5;font-size:10px}
 @media(max-width:650px){.library-filters{align-items:flex-start;flex-direction:column}.library-filters>label{align-self:flex-end}}
+
+/* LRCLIB lyrics stage */
+.lyrics-stage{position:absolute;inset:0;z-index:2;display:flex;flex-direction:column;min-width:0;min-height:0;padding:clamp(18px,3vw,42px);background:radial-gradient(ellipse at 50% 35%,#22282d 0%,#111619 50%,#080b0d 100%);color:#f2f4f5}
+.lyrics-header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:16px;border-bottom:1px solid #ffffff16}
+.lyrics-heading{min-width:0}
+.lyrics-heading>span{display:block;color:#ed9567;font:9px var(--mono);letter-spacing:1.6px}
+.lyrics-heading h2{margin:8px 0 4px;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#f4f6f7;font:700 clamp(17px,2.1vw,24px) Manrope,sans-serif}
+.lyrics-heading p{margin:0;color:#9ba7ae;font-size:11px}
+.lyrics-actions{display:flex;align-items:center;gap:5px;flex:none}
+.lyrics-actions button{height:29px;min-width:38px;padding:0 9px;border:1px solid #ffffff20;border-radius:4px;background:#ffffff08;color:#aeb9bf;font:9px var(--mono);letter-spacing:.5px}
+.lyrics-actions button.selected{border-color:#bd7149;background:#3b261c;color:#ffc097}
+.lyrics-actions button:disabled{opacity:.32;cursor:default}
+.lyrics-actions button:last-child{display:grid;place-items:center;min-width:30px;padding:0}
+.lyrics-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:17px;padding:clamp(35px,6vh,78px) 12px 70px;scrollbar-width:thin;scrollbar-color:#48545c transparent;mask-image:linear-gradient(to bottom,transparent 0,black 8%,black 92%,transparent 100%)}
+.lyric-line{max-width:900px;color:#87949d;text-align:center;font:600 clamp(17px,2.35vw,27px)/1.45 Manrope,sans-serif;letter-spacing:-.3px;opacity:.65;transition:color .25s,opacity .25s,transform .25s;text-wrap:balance;cursor:default}
+.lyric-line:not(.unsynced){cursor:pointer}
+.lyric-line.current{color:#fff;opacity:1;transform:scale(1.035);text-shadow:0 2px 25px #ed79384a}
+.lyrics-empty{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#89969e;text-align:center}
+.lyrics-empty svg{color:#e68a55}
+.lyrics-empty strong{color:#eef1f3;font:600 16px Manrope,sans-serif}
+.lyrics-empty span{max-width:390px;color:#99a5ad;font-size:11px;line-height:1.6}
+.lyrics-empty .open-button{margin-top:5px;padding:0 14px}
+.lyrics-footer{display:flex;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid #ffffff16;color:#75828a;font:9px var(--mono)}
+.lyrics-menu-note{display:block;padding:4px 9px;color:#8c989f;font-size:9px;line-height:1.5}
+
+/* Quiet playback controls: advanced actions stay in the top menus */
+.player-page{padding:10px 14px 9px}
+.control-bar{position:relative;justify-content:center;min-height:54px}
+.control-bar .transport-buttons{gap:23px}
+.control-bar .control-group.right{position:absolute;right:0;top:50%;transform:translateY(-50%)}
+.control-bar .main-play{width:42px;height:42px}
+.now-playing{gap:10px}
+.track-details strong{font-size:12px}
+.track-details span{font-size:10px}
+.now-playing .cover-mini{width:38px;height:38px}
+.toolbar-plain{white-space:nowrap}
+
+/* Use the entire available viewing stage for video, preserving the whole frame */
+.viewing-surface{width:100%;max-width:none;max-height:none;min-height:0;flex:1}
+.video-frame,.video-frame.default{width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;min-width:0;min-height:0;margin:0;display:flex;align-items:center;justify-content:center;aspect-ratio:auto!important;background:#030405}
+.video-frame .media-element{display:block;width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center}
+.player-page:fullscreen .viewing-surface{width:100vw;height:100vh;max-width:none;max-height:none;min-height:0}
+.player-page:fullscreen .video-frame,.player-page:fullscreen .video-frame.default{width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important}
+.player-page:fullscreen .video-frame .media-element{width:100%!important;height:100%!important;object-fit:contain!important}

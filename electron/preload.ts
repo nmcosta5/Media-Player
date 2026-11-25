@@ -4,6 +4,7 @@ type MediaFile = { name: string; path: string; url: string };
 
 contextBridge.exposeInMainWorld("merci", {
   openFiles: (): Promise<MediaFile[]> => ipcRenderer.invoke("media:open"),
+  getLyrics: (input: {title:string;artist?:string;album?:string;duration?:number}): Promise<{status:string;trackName?:string;artistName?:string;albumName?:string;duration?:number|null;plainLyrics?:string|null;syncedLyrics?:string|null;savedPath?:string;source?:string;message?:string;retryAfter?:number|null}> => ipcRenderer.invoke("lyrics:get", input),
   getMetadata: (filePath: string): Promise<{title:string|null;artist:string|null;album:string|null;year:number|null;artwork:string|null;duration:number|null;bitrate:number|null}|null> => ipcRenderer.invoke("media:metadata", filePath),
   openOne: (): Promise<MediaFile[]> => ipcRenderer.invoke("media:open-one"),
   openFolder: (): Promise<MediaFile[]> => ipcRenderer.invoke("media:open-folder"),

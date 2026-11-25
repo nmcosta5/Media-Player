@@ -1,6 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import { pathToFileURL } from "node:url";
-import { readdir, readFile, stat, writeFile } from "node:fs/promises";
+import { readdir, readFile, stat, writeFile, mkdir } from "node:fs/promises";
 import { parseFile } from "music-metadata";
 import path from "node:path";
 
@@ -73,8 +73,101 @@ async function chooseMedia(multiple = true) {
   return result.filePaths.map(asMediaFile);
 }
 
+type LyricsRecord = {
+  id?: number; trackName?: string; name?: string; artistName?: string; albumName?: string;
+  duration?: number; instrumental?: boolean; plainLyrics?: string | null; syncedLyrics?: string | null;
+};
+const lyricsDirectory = () => path.join(app.getPath("documents"), "MerciPlayer", "Lyrics");
+const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"\\|?*\x00-\x1f]/g, "_").replace(/\//g, "_").replace(/[. ]+$/g, "").trim().slice(0, 90) || "Unknown";
+const lyricsHeaders = { "User-Agent": "MerciPlayer/1.0 (https://github.com/nmcosta5/Media-Player)", "Accept": "application/json" };
+let lyricsRequestTail: Promise<void> = Promise.resolve();
+let lyricsLastRequestAt = 0;
+let lyricsRetryAt = 0;
+
+async function getLyricsForTrack(input: { title: string; artist?: string; album?: string; duration?: number }) {
+  const title = input.title.trim().slice(0, 240);
+  const artist = (input.artist ?? "").trim().slice(0, 240);
+  const album = (input.album ?? "").trim().slice(0, 240);
+  const duration = Number.isFinite(input.duration) && Number(input.duration) >= 1 && Number(input.duration) <= 3600 ? Math.round(Number(input.duration)) : undefined;
+  if (!title) return { status: "invalid", message: "Track title is missing." };
+  const directory = lyricsDirectory();
+  const baseName = safeLyricsName((artist ? artist + " - " : "") + title + (album ? " - " + album : ""));
+  const localSynced = path.join(directory, baseName + ".lrc");
+  const localPlain = path.join(directory, baseName + ".txt");
+  try {
+    const [syncedLyrics, plainLyrics] = await Promise.all([
+      readFile(localSynced, "utf8").catch(() => null),
+      readFile(localPlain, "utf8").catch(() => null)
+    ]);
+    if (syncedLyrics || plainLyrics) return { status: "cached", trackName: title, artistName: artist, albumName: album, syncedLyrics, plainLyrics, savedPath: directory, source: "Local lyrics cache" };
+  } catch { /* A missing Documents folder is created after a successful download. */ }
+  const request = async (url: URL): Promise<{response: Response; data: unknown}> => {
+    const task = lyricsRequestTail.then(async () => {
+      const retryWait = Math.max(0, lyricsRetryAt - Date.now());
+      if (retryWait > 0) throw Object.assign(new Error("LRCLIB asked this app to wait before the next request."), { retryAfter: Math.ceil(retryWait / 1000) });
+      const delay = Math.max(0, 300 - (Date.now() - lyricsLastRequestAt));
+      if (delay > 0) await new Promise<void>(resolve => setTimeout(resolve, delay));
+      lyricsLastRequestAt = Date.now();
+      const response = await fetch(url, { headers: lyricsHeaders, signal: AbortSignal.timeout(15000) });
+      if (!response.ok && response.status !== 404) {
+        if (response.status === 429) {
+          const retryAfterValue = Number(response.headers.get("retry-after") || 30);
+          const retryAfter = Number.isFinite(retryAfterValue) && retryAfterValue > 0 ? retryAfterValue : 30;
+          lyricsRetryAt = Date.now() + retryAfter * 1000;
+          throw Object.assign(new Error("LRCLIB rate limit reached. Please retry after the indicated delay."), { retryAfter });
+        }
+        throw new Error("LRCLIB returned HTTP " + response.status);
+      }
+      return { response, data: response.ok ? await response.json() as unknown : null };
+    });
+    lyricsRequestTail = task.then(() => undefined, () => undefined);
+    return task;
+  };
+  let record: LyricsRecord | null = null;
+  try {
+    if (artist) {
+      const signature = new URL("https://lrclib.net/api/get");
+      signature.searchParams.set("track_name", title);
+      signature.searchParams.set("artist_name", artist);
+      if (album) signature.searchParams.set("album_name", album);
+      if (duration) signature.searchParams.set("duration", String(duration));
+      const exact = await request(signature);
+      if (exact.response.ok && exact.data && typeof exact.data === "object") record = exact.data as LyricsRecord;
+    }
+    if (!record) {
+      const search = new URL("https://lrclib.net/api/search");
+      if (artist) { search.searchParams.set("track_name", title); search.searchParams.set("artist_name", artist); }
+      else search.searchParams.set("q", title);
+      if (album) search.searchParams.set("album_name", album);
+      const result = await request(search);
+      const candidates = Array.isArray(result.data) ? result.data as LyricsRecord[] : [];
+      const normalise = (value: string) => value.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+      const wantedTitle = normalise(title); const wantedArtist = normalise(artist);
+      record = candidates.find(candidate => normalise(candidate.trackName ?? candidate.name ?? "") === wantedTitle && (!wantedArtist || normalise(candidate.artistName ?? "") === wantedArtist))
+        ?? candidates.find(candidate => normalise(candidate.trackName ?? candidate.name ?? "").includes(wantedTitle))
+        ?? candidates[0] ?? null;
+    }
+    if (!record) return { status: "not-found", message: "No matching lyrics were found on LRCLIB." };
+    const syncedLyrics = typeof record.syncedLyrics === "string" && record.syncedLyrics.trim() ? record.syncedLyrics : null;
+    const plainLyrics = typeof record.plainLyrics === "string" && record.plainLyrics.trim() ? record.plainLyrics : null;
+    if (record.instrumental || (!syncedLyrics && !plainLyrics)) return { status: "instrumental", trackName: record.trackName ?? title, artistName: record.artistName ?? artist, message: "LRCLIB marks this track as instrumental or has no lyrics text." };
+    await mkdir(directory, { recursive: true });
+    if (syncedLyrics) await writeFile(localSynced, syncedLyrics + "\n", "utf8");
+    if (plainLyrics) await writeFile(localPlain, plainLyrics + "\n", "utf8");
+    return { status: "found", id: record.id ?? null, trackName: record.trackName ?? record.name ?? title, artistName: record.artistName ?? artist, albumName: record.albumName ?? album, duration: record.duration ?? duration ?? null, syncedLyrics, plainLyrics, savedPath: directory, source: "LRCLIB" };
+  } catch (error) {
+    const failure = error as Error & { retryAfter?: number };
+    return { status: "error", message: failure.message || "Could not reach LRCLIB.", retryAfter: failure.retryAfter ?? null };
+  }
+}
 app.whenReady().then(() => {
   ipcMain.handle("media:open", () => chooseMedia(true));
+  ipcMain.handle("lyrics:get", async (_event, input: unknown) => {
+    if (!input || typeof input !== "object") return { status: "invalid", message: "Invalid lyrics request." };
+    const value = input as Record<string, unknown>;
+    if (typeof value.title !== "string" || value.title.length > 240 || (value.artist !== undefined && typeof value.artist !== "string") || (value.album !== undefined && typeof value.album !== "string")) return { status: "invalid", message: "Invalid track information." };
+    return getLyricsForTrack({ title: value.title, artist: typeof value.artist === "string" ? value.artist : undefined, album: typeof value.album === "string" ? value.album : undefined, duration: typeof value.duration === "number" ? value.duration : undefined });
+  });
   ipcMain.handle("media:metadata", async (_event, filePath: string) => {
     try {
       const metadata = await parseFile(filePath);

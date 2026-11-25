@@ -29,12 +29,20 @@ Merci Player combines a player-first workspace with local media discovery, a per
 - Video brightness, contrast, saturation, and rotation controls.
 - Media information panel for track, file, duration, and available video details.
 
+### Music lyrics
+- Automatic LRCLIB lookup for the currently playing audio track, using embedded title, artist, album, and duration metadata where available.
+- Displays synchronized LRC lyrics with a live highlighted line, with plain lyrics as a fallback.
+- Automatically saves downloaded `.lrc` and `.txt` files under `Documents/MerciPlayer/Lyrics` and reuses the local cache when offline.
+- Lyrics can be opened from the top **Lyrics** menu; press `L` to show or hide the lyrics panel while audio is active.
+
 ### Subtitles
 - Manual SRT and VTT subtitle loading.
 - Automatic sidecar subtitle discovery beside local video files.
 - Subtitle delay/synchronization, font family, font size, text color, and background opacity controls.
 
 ## Supported file extensions
+
+Downloaded LRCLIB lyrics are stored locally at `%USERPROFILE%\\Documents\\MerciPlayer\\Lyrics` on Windows. LRCLIB is an online service; an existing local lyrics file is loaded without requiring an internet connection.
 
 The current file picker and folder scanner recognize:
 
@@ -56,6 +64,7 @@ Actual audio/video playback depends on codecs supported by the Electron/Chromium
 | F | Fullscreen |
 | S | Stop |
 | V | Toggle subtitles |
+| L | Toggle music lyrics |
 | R | Set A–B loop points / clear loop |
 | E | Pause / advance video one frame |
 | [ / ] | Decrease / increase playback speed |
