@@ -1,24 +1,79 @@
 # Merci Player
 
-**A focused, modern desktop media player for Windows.** Built with Electron, React, TypeScript, and Vite.
+**A focused, VLC-inspired desktop media player for Windows.** Built with Electron, React, TypeScript, and Vite.
 
-Merci Player is designed around a clean library, a distraction-free playback stage, and quick access to your queue. It supports local audio and video files, drag-and-drop importing, favorites, playback speed, volume, seeking, and fullscreen.
+Merci Player combines a player-first workspace with local media discovery, a persistent playback queue, saved playlists, subtitle tools, and advanced audio/video controls. Its visual system uses graphite surfaces, soft neutral text, and a warm orange accent.
 
 ## Features
 
-- Minimal dark interface with a restrained lime accent
-- Local file picker and drag-and-drop import
-- Audio and video playback using the Chromium media engine
-- Queue, library, favorites, and search
-- Play/pause, previous/next, seek, volume, mute, repeat, and shuffle controls
-- Playback speed control
-- Fullscreen video
-- Keyboard shortcuts
-- Windows installer and portable executable builds
+### Playback and library
+- Local audio, video, and image playback with drag-and-drop importing.
+- Recursive folder scanning for supported local media, with a 12,000-file safety cap.
+- Library search, media-type filters, and sorting by added order, recent playback, or name.
+- Recently played files, favorites, and automatic resume from the last saved position for desktop file paths.
+- Persistent queue and saved playlists, including queue reordering and playlist playback.
+- Embedded audio metadata and artwork; video-frame thumbnails when a frame can be captured.
+- Windows Media Session metadata and transport actions where the platform supports them.
+
+### Player controls
+- VLC-inspired transport controls, keyboard shortcuts, and a smoother draggable seek bar.
+- Played and buffered progress, hover time preview, and responsive playhead updates.
+- 10-second skip controls, playback speed, repeat, shuffle, and A–B looping.
+- Frame stepping for video, aspect-ratio selection, and fullscreen controls that hide after inactivity.
+- Picture-in-Picture, always-on-top window mode, and video snapshot saving.
+- Per-media bookmarks and a sleep timer.
+
+### Audio and video tools
+- 10-band equalizer with presets and live spectrum visualization.
+- Audio-output device selection when the desktop media engine exposes device switching.
+- Video brightness, contrast, saturation, and rotation controls.
+- Media information panel for track, file, duration, and available video details.
+
+### Subtitles
+- Manual SRT and VTT subtitle loading.
+- Automatic sidecar subtitle discovery beside local video files.
+- Subtitle delay/synchronization, font family, font size, text color, and background opacity controls.
 
 ## Supported file extensions
 
-The file picker recognizes MP4, MKV, AVI, MOV, WebM, M4V, MP3, WAV, FLAC, AAC, OGG, M4A, and WMA. Actual playback depends on the codecs available in the Electron/Windows media engine. VLC-level codec coverage (including some MKV/AVI variants) requires a dedicated bundled FFmpeg or libVLC playback backend and is a planned upgrade.
+The current file picker and folder scanner recognize:
+
+- **Audio:** MP3, WAV, FLAC, AAC, OGG, M4A, WMA, AIFF, OPUS
+- **Video:** MP4, MKV, AVI, MOV, WebM, M4V, MPG, MPEG, WMV, TS
+- **Images:** PNG, JPG, JPEG, GIF, WebP, BMP, AVIF, SVG
+- **External subtitles:** SRT and VTT
+
+Actual audio/video playback depends on codecs supported by the Electron/Chromium media engine on the target Windows installation. This is not a bundled libVLC engine, so format recognition does not guarantee that every codec/container combination will decode.
+
+## Keyboard shortcuts
+
+| Shortcut | Action |
+| --- | --- |
+| Space | Play / pause |
+| N / P | Next / previous media |
+| M | Mute / unmute |
+| A | Cycle aspect ratio |
+| F | Fullscreen |
+| S | Stop |
+| V | Toggle subtitles |
+| R | Set A–B loop points / clear loop |
+| E | Pause / advance video one frame |
+| [ / ] | Decrease / increase playback speed |
+| = | Reset playback speed to 1× |
+| Left / Right | Seek 5 seconds |
+| Shift + Left / Right | Seek 10 seconds |
+| Ctrl + Left / Right | Seek 60 seconds |
+| Up / Down | Adjust volume |
+| T | Toggle queue |
+| I | Show media information |
+| Ctrl + B | Add/remove bookmark at current position |
+| Ctrl + Shift + S | Save video snapshot |
+| Ctrl + O | Open file |
+| Ctrl + Shift + O | Open folder / scan |
+| Ctrl + Alt + O | Open multiple files |
+| Ctrl + L | Open media library |
+| Ctrl + Shift + P | Create playlist |
+| ? | Show keyboard shortcut reference |
 
 ## Development
 
@@ -47,17 +102,7 @@ npm run dist:dir
 
 ## Automated Windows build
 
-GitHub Actions builds the Windows installer and portable executable on pushes to `main` that touch app/build files. Open the repository's **Actions** tab and download the `Merci-Player-Windows` artifact from a successful run. You can also start a build manually with **Run workflow**.
-
-## Keyboard shortcuts
-
-| Shortcut | Action |
-| --- | --- |
-| Ctrl + O | Open media files |
-| Space | Play / pause |
-| Left / Right | Seek backward / forward 5 seconds |
-| Up / Down | Increase / decrease volume |
-| F | Fullscreen |
+GitHub Actions builds the Windows installer and portable executable on pushes to configured app/build branches. Open the repository's **Actions** tab and download the `Merci-Player-Windows` artifact from a successful run. You can also start a build manually with **Run workflow**.
 
 ## Project structure
 
@@ -69,4 +114,4 @@ src/            React application and styles
 
 ## Security
 
-The renderer runs with Node integration disabled and context isolation enabled. File selection and window actions are exposed through a small preload bridge.
+The renderer runs with Node integration disabled and context isolation enabled. File selection, folder scanning, metadata, snapshot saving, and window actions are exposed through a constrained preload bridge.
