@@ -67,7 +67,7 @@ const seek=(value:number)=>{const target=media.current;const safe=Math.max(0,Mat
  useEffect(()=>{
  const track=active;
  if(!track||track.kind!=="audio"||(track.path&&!track.metadataLoaded)){setLyricsData(null);setLyricsLoading(false);return;}
- const title=(track.info?.title||track.name.replace(/\\.[^.]+$/,"")).trim();
+ const title=(track.info?.title||track.name.replace(/\.[^.]+$/,"")).trim();
  const artist=(track.info?.artist||"").trim();
  const album=(track.info?.album||"").trim();
  const trackDuration=track.info?.duration??(duration||undefined);
