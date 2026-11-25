@@ -14,7 +14,7 @@ contextBridge.exposeInMainWorld("merci", {
   close: (): Promise<void> => ipcRenderer.invoke("window:close"),
   onMenu: (callback: (action: string) => void) => {
     const listeners = new Map<string, (_event: Electron.IpcRendererEvent) => void>();
-    for (const action of ["open", "open-multiple", "play-pause", "stop", "fullscreen"]) {
+    for (const action of ["open", "open-folder", "open-multiple", "play-pause", "stop", "fullscreen"]) {
       const listener = () => callback(action);
       listeners.set(action, listener);
       ipcRenderer.on("menu:" + action, listener);
