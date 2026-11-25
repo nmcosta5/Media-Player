@@ -127,7 +127,7 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
       if (album) search.searchParams.set("album_name", album);
       const result = await request(search);
       const candidates = Array.isArray(result.data) ? result.data as LyricsRecord[] : [];
-      const normalise = (value: string) => value.toLocaleLowerCase().replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
+      const normalise = (value: string) => value.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
       const wantedTitle = normalise(title); const wantedArtist = normalise(artist);
       record = candidates.find(candidate => normalise(candidate.trackName ?? candidate.name ?? "") === wantedTitle && (!wantedArtist || normalise(candidate.artistName ?? "") === wantedArtist))
         ?? candidates.find(candidate => normalise(candidate.trackName ?? candidate.name ?? "").includes(wantedTitle))
@@ -138,8 +138,8 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
     const plainLyrics = typeof record.plainLyrics === "string" && record.plainLyrics.trim() ? record.plainLyrics : null;
     if (record.instrumental || (!syncedLyrics && !plainLyrics)) return { status: "instrumental", trackName: record.trackName ?? title, artistName: record.artistName ?? artist, message: "LRCLIB marks this track as instrumental or has no lyrics text." };
     await mkdir(directory, { recursive: true });
-    if (syncedLyrics) await writeFile(localSynced, syncedLyrics + "\\n", "utf8");
-    if (plainLyrics) await writeFile(localPlain, plainLyrics + "\\n", "utf8");
+    if (syncedLyrics) await writeFile(localSynced, syncedLyrics + "\n", "utf8");
+    if (plainLyrics) await writeFile(localPlain, plainLyrics + "\n", "utf8");
     return { status: "found", id: record.id ?? null, trackName: record.trackName ?? record.name ?? title, artistName: record.artistName ?? artist, albumName: record.albumName ?? album, duration: record.duration ?? duration ?? null, syncedLyrics, plainLyrics, savedPath: directory, source: "LRCLIB" };
   } catch (error) {
     const failure = error as Error & { retryAfter?: number };
