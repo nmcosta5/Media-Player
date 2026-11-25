@@ -3,7 +3,7 @@ name: Build Merci Player for Windows
 on:
   workflow_dispatch:
   push:
-    branches: [main, master, redesign/immersive-player]
+    branches: [main, master, redesign/immersive-player, feature/vlc-interface-windows-media-session]
     tags: ["v*"]
     paths:
       - "src/**"
