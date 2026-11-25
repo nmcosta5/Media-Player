@@ -1,273 +1,55 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  AudioLines, ChevronDown, CircleHelp, Disc3, FileVideo, FolderOpen,
-  Heart, ListMusic, Maximize, MoreHorizontal, Music2, Pause, Play,
-  Plus, Repeat, Search, SkipBack, SkipForward, Volume2,
-  VolumeX, X, Shuffle, PanelLeftClose, PanelLeftOpen
-} from "lucide-react";
-
-type MediaFile = { name: string; path: string; url: string };
-type Track = { id: string; name: string; url: string; path?: string; kind: "audio" | "video"; duration?: number };
-type View = "home" | "library" | "playlist" | "favorites";
-
-const audioExt = /\.(mp3|wav|flac|aac|ogg|m4a|wma)$/i;
-const videoExt = /\.(mp4|mkv|avi|mov|webm|m4v)$/i;
-const formatTime = (seconds: number) => {
-  if (!Number.isFinite(seconds)) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
-  return `${m}:${String(s).padStart(2, "0")}`;
-};
-const makeTrack = (file: File | MediaFile): Track | null => {
-  const name = file.name;
-  const kind = audioExt.test(name) ? "audio" : videoExt.test(name) ? "video" : null;
-  if (!kind) return null;
-  const url = "url" in file ? file.url : URL.createObjectURL(file);
-  return { id: crypto.randomUUID(), name, url, path: "path" in file ? file.path : undefined, kind };
-};
-
-export default function App() {
-  const mediaRef = useRef<HTMLVideoElement & HTMLAudioElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [currentId, setCurrentId] = useState<string | null>(null);
-  const [playing, setPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [volume, setVolume] = useState(0.82);
-  const [muted, setMuted] = useState(false);
-  const [query, setQuery] = useState("");
-  const [view, setView] = useState<View>("home");
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [repeat, setRepeat] = useState(false);
-  const [shuffle, setShuffle] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [dragging, setDragging] = useState(false);
-  const [error, setError] = useState("");
-  const [playbackRate, setPlaybackRate] = useState(1);
-
-  const current = tracks.find((track) => track.id === currentId) ?? null;
-  const visibleTracks = useMemo(() => {
-    const base = view === "favorites" ? tracks.filter((t) => favorites.includes(t.id))
-      : view === "playlist" ? tracks : tracks;
-    return base.filter((t) => t.name.toLowerCase().includes(query.toLowerCase()));
-  }, [tracks, favorites, view, query]);
-
-  const addTracks = useCallback((incoming: (File | MediaFile)[]) => {
-    const valid = incoming.map(makeTrack).filter((t): t is Track => Boolean(t));
-    if (!valid.length) { setError("No supported media files found. Try MP4, MKV, MP3, WAV or FLAC."); return; }
-    setError("");
-    setTracks((old) => {
-      const next = [...old, ...valid];
-      if (!currentId && valid[0]) setCurrentId(valid[0].id);
-      return next;
-    });
-    if (!currentId && valid[0]) setView("home");
-  }, [currentId]);
-
-  const openFiles = useCallback(async () => {
-    if (window.merci) {
-      const files = await window.merci.openFiles();
-      if (files.length) addTracks(files);
-    } else fileInputRef.current?.click();
-  }, [addTracks]);
-
-  const playTrack = useCallback((id: string) => {
-    setCurrentId(id);
-    setCurrentTime(0);
-    setPlaying(true);
-    setError("");
-  }, []);
-
-  const stepTrack = useCallback((direction: number) => {
-    if (!tracks.length) return;
-    const index = Math.max(0, tracks.findIndex((t) => t.id === currentId));
-    const next = shuffle ? Math.floor(Math.random() * tracks.length) : (index + direction + tracks.length) % tracks.length;
-    playTrack(tracks[next].id);
-  }, [tracks, currentId, shuffle, playTrack]);
-
-  const togglePlay = useCallback(() => {
-    if (!current) { if (tracks[0]) playTrack(tracks[0].id); else openFiles(); return; }
-    setPlaying((v) => !v);
-  }, [current, tracks, playTrack, openFiles]);
-
-  useEffect(() => {
-    const el = mediaRef.current;
-    if (!el || !current) return;
-    el.volume = muted ? 0 : volume;
-    el.playbackRate = playbackRate;
-    if (playing) void el.play().catch(() => { setPlaying(false); setError("This media format may not be supported by your system."); });
-    else el.pause();
-  }, [playing, current, volume, muted, playbackRate]);
-
-  useEffect(() => {
-    const el = mediaRef.current;
-    if (!el) return;
-    const onTime = () => setCurrentTime(el.currentTime || 0);
-    const onDuration = () => setDuration(Number.isFinite(el.duration) ? el.duration : 0);
-    const onEnded = () => { if (repeat) { el.currentTime = 0; void el.play(); } else stepTrack(1); };
-    const onError = () => setError("Unable to play this file. Try another media format.");
-    el.addEventListener("timeupdate", onTime);
-    el.addEventListener("loadedmetadata", onDuration);
-    el.addEventListener("ended", onEnded);
-    el.addEventListener("error", onError);
-    return () => {
-      el.removeEventListener("timeupdate", onTime);
-      el.removeEventListener("loadedmetadata", onDuration);
-      el.removeEventListener("ended", onEnded);
-      el.removeEventListener("error", onError);
-    };
-  }, [currentId, repeat, stepTrack]);
-
-  useEffect(() => {
-    const unsubscribe = window.merci?.onMenu((action) => {
-      if (action === "open" || action === "open-multiple") void openFiles();
-      if (action === "play-pause") togglePlay();
-      if (action === "stop") { setPlaying(false); if (mediaRef.current) mediaRef.current.currentTime = 0; }
-      if (action === "fullscreen") void document.querySelector(".stage")?.requestFullscreen();
-    });
-    const onKey = (event: KeyboardEvent) => {
-      const target = event.target as HTMLElement;
-      if (["INPUT", "TEXTAREA"].includes(target.tagName)) return;
-      if (event.code === "Space") { event.preventDefault(); togglePlay(); }
-      if (event.code === "ArrowRight") { if (mediaRef.current) mediaRef.current.currentTime += 5; }
-      if (event.code === "ArrowLeft") { if (mediaRef.current) mediaRef.current.currentTime -= 5; }
-      if (event.code === "ArrowUp") setVolume((v) => Math.min(1, v + 0.05));
-      if (event.code === "ArrowDown") setVolume((v) => Math.max(0, v - 0.05));
-      if (event.key.toLowerCase() === "f") void document.querySelector(".stage")?.requestFullscreen();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => { unsubscribe?.(); window.removeEventListener("keydown", onKey); };
-  }, [openFiles, togglePlay]);
-
-  const toggleFavorite = (id: string) => setFavorites((old) => old.includes(id) ? old.filter((x) => x !== id) : [...old, id]);
-  const seek = (value: number) => { if (mediaRef.current) mediaRef.current.currentTime = value; setCurrentTime(value); };
-  const title = view === "favorites" ? "Your favorites" : view === "playlist" ? "Playing queue" : view === "library" ? "Your library" : "Your space";
-
-  return (
-    <div className="app-shell" onDragOver={(e) => { e.preventDefault(); setDragging(true); }} onDragLeave={(e) => { if (e.currentTarget === e.target) setDragging(false); }} onDrop={(e) => {
-      e.preventDefault(); setDragging(false);
-      const files = Array.from(e.dataTransfer.files);
-      addTracks(files);
-    }}>
-      <header className="topbar">
-        <div className="brand"><div className="brand-mark"><AudioLines size={17} /></div><span>merci<span className="brand-light"> player</span></span></div>
-        <div className="window-caption">A quieter way to listen</div>
-      </header>
-
-      <div className="workspace">
-        {sidebarOpen && <aside className="sidebar">
-          <div className="side-section">
-            <div className="side-label">MENU</div>
-            <button className={view === "home" ? "nav-item active" : "nav-item"} onClick={() => setView("home")}><Disc3 size={17}/> Overview</button>
-            <button className={view === "library" ? "nav-item active" : "nav-item"} onClick={() => setView("library")}><ListMusic size={17}/> Library <span className="nav-count">{tracks.length}</span></button>
-            <button className={view === "playlist" ? "nav-item active" : "nav-item"} onClick={() => setView("playlist")}><AudioLines size={17}/> Queue</button>
-            <button className={view === "favorites" ? "nav-item active" : "nav-item"} onClick={() => setView("favorites")}><Heart size={17}/> Favorites</button>
-          </div>
-          <div className="sidebar-bottom">
-            <div className="storage-card"><div className="storage-icon"><FolderOpen size={17}/></div><div><strong>Your collection</strong><span>{tracks.length} {tracks.length === 1 ? "file" : "files"} added</span></div></div>
-            <button className="side-help"><CircleHelp size={15}/> Keyboard shortcuts <span>?</span></button>
-            <div className="version">MERCI PLAYER <span>·</span> 1.0.0</div>
-          </div>
-        </aside>}
-
-        <main className="main-content">
-          <div className="content-toolbar">
-            <button className="icon-btn sidebar-toggle" aria-label="Toggle sidebar" onClick={() => setSidebarOpen((v) => !v)}>{sidebarOpen ? <PanelLeftClose size={17}/> : <PanelLeftOpen size={17}/>}</button>
-            <div className="breadcrumb">Library <span>/</span> <strong>{title}</strong></div>
-            <div className="toolbar-right">
-              <label className="search-box"><Search size={15}/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search your music..." /><kbd>⌘ K</kbd></label>
-              <button className="add-button" onClick={() => void openFiles()}><Plus size={16}/> Add media</button>
-            </div>
-          </div>
-
-          <div className="page-scroll">
-            <section className="welcome-row">
-              <div><div className="eyebrow"><span className="status-dot"/> YOUR PERSONAL MEDIA SPACE</div><h1>{title}<span className="heading-period">.</span></h1><p>A little less noise. A lot more listening.</p></div>
-              <div className="welcome-actions"><span className="file-total">{tracks.length} ITEMS</span><button className="round-action" onClick={() => void openFiles()} aria-label="Add files"><Plus size={19}/></button></div>
-            </section>
-
-            <section className="player-layout">
-              <div className="player-column">
-                <div className={current?.kind === "video" ? "stage video-stage" : "stage"}>
-                  {current?.kind === "video" ? (
-                    <video ref={mediaRef as React.RefObject<HTMLVideoElement>} key={current.id} src={current.url} className="video-element" onClick={togglePlay} />
-                  ) : (
-                    <>
-                      <div className="stage-glow"/>
-                      <div className="album-art">
-                        <div className="art-ring ring-one"/><div className="art-ring ring-two"/>
-                        <div className="art-core"><AudioLines size={52} strokeWidth={1.1}/></div>
-                        <span className="art-orbit orbit-a"/><span className="art-orbit orbit-b"/>
-                      </div>
-                      <div className={playing ? "sound-wave active" : "sound-wave"}>{Array.from({length: 36}, (_, i) => <i key={i} style={{height: `${12 + ((i * 17 + 13) % 43)}px`, animationDelay: `${i * 0.035}s`}}/>)}</div>
-                      {!current && <div className="empty-stage-copy"><span>READY WHEN YOU ARE</span><strong>Your next favorite<br/>thing starts here.</strong><button onClick={() => void openFiles()}><Plus size={15}/> Open a media file</button></div>}
-                    </>
-                  )}
-                  {current?.kind === "video" && <div className="video-tag"><FileVideo size={13}/> NOW PLAYING</div>}
-                  <button className="stage-more" aria-label="More options"><MoreHorizontal size={19}/></button>
-                </div>
-
-                <div className="track-meta">
-                  <div className="track-cover">{current?.kind === "video" ? <FileVideo size={20}/> : <Music2 size={21}/>}</div>
-                  <div className="track-text"><strong title={current?.name}>{current?.name ?? "Nothing playing yet"}</strong><span>{current ? (current.kind === "video" ? "VIDEO FILE" : "AUDIO FILE") : "Choose something from your library"}</span></div>
-                  {current && <button className={favorites.includes(current.id) ? "favorite-btn selected" : "favorite-btn"} onClick={() => toggleFavorite(current.id)} aria-label="Toggle favorite"><Heart size={18} fill={favorites.includes(current.id) ? "currentColor" : "none"}/></button>}
-                </div>
-
-                <div className="playback-panel">
-                  <div className="progress-wrap"><span>{formatTime(currentTime)}</span><input aria-label="Seek" type="range" min="0" max={duration || 0} step="0.1" value={Math.min(currentTime, duration || 0)} onChange={(e) => seek(Number(e.target.value))} style={{"--progress": `${duration ? currentTime / duration * 100 : 0}%`} as React.CSSProperties}/><span>{formatTime(duration)}</span></div>
-                  <div className="control-row">
-                    <div className="control-side"><button className={shuffle ? "control-btn toggled" : "control-btn"} onClick={() => setShuffle((v) => !v)} aria-label="Shuffle"><Shuffle size={17}/></button></div>
-                    <div className="transport">
-                      <button className="control-btn skip" onClick={() => stepTrack(-1)} aria-label="Previous"><SkipBack size={19} fill="currentColor"/></button>
-                      <button className="play-button" onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}>{playing ? <Pause size={20} fill="currentColor"/> : <Play size={20} fill="currentColor"/>}</button>
-                      <button className="control-btn skip" onClick={() => stepTrack(1)} aria-label="Next"><SkipForward size={19} fill="currentColor"/></button>
-                    </div>
-                    <div className="control-side right-controls">
-                      <button className={repeat ? "control-btn toggled" : "control-btn"} onClick={() => setRepeat((v) => !v)} aria-label="Repeat"><Repeat size={17}/></button>
-                      <button className="control-btn speed-btn" onClick={() => setPlaybackRate((v) => v >= 2 ? 0.5 : Math.round((v + 0.25) * 100) / 100)}>{playbackRate}×</button>
-                      <div className="volume-control"><button className="control-btn" onClick={() => setMuted((v) => !v)} aria-label="Mute">{muted || volume === 0 ? <VolumeX size={17}/> : <Volume2 size={17}/>}</button><input aria-label="Volume" type="range" min="0" max="1" step="0.01" value={muted ? 0 : volume} onChange={(e) => {setVolume(Number(e.target.value));setMuted(false);}}/></div>
-                      <button className="control-btn" aria-label="Fullscreen" onClick={() => void document.querySelector(".stage")?.requestFullscreen()}><Maximize size={16}/></button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <aside className="queue-panel">
-                <div className="queue-heading"><div><span className="eyebrow">UP NEXT</span><h2>Playing queue</h2></div><button className="text-action" onClick={() => setView("playlist")}>View all <ChevronDown size={14}/></button></div>
-                {tracks.length ? <div className="queue-list">{tracks.slice(0, 6).map((track, index) => (
-                  <button key={track.id} className={track.id === currentId ? "queue-item current" : "queue-item"} onClick={() => playTrack(track.id)}>
-                    <div className="queue-index">{track.id === currentId && playing ? <AudioLines size={15}/> : String(index + 1).padStart(2, "0")}</div>
-                    <div className="queue-art">{track.kind === "video" ? <FileVideo size={16}/> : <Music2 size={16}/>}</div>
-                    <div className="queue-info"><strong title={track.name}>{track.name}</strong><span>{track.kind === "video" ? "Video" : "Audio"}</span></div>
-                    {track.id === currentId ? <span className="playing-pill">PLAYING</span> : <span className="queue-duration">{track.duration ? formatTime(track.duration) : "—"}</span>}
-                  </button>
-                ))}</div> : <div className="queue-empty"><div className="queue-empty-icon"><ListMusic size={22}/></div><strong>Your queue is clear</strong><span>Add a few files and<br/>they'll show up here.</span><button onClick={() => void openFiles()}><Plus size={14}/> Add media</button></div>}
-                <div className="queue-footer"><span><span className="status-dot"/> LOCAL PLAYBACK</span><span>PRIVATE BY DESIGN</span></div>
-              </aside>
-            </section>
-
-            <section className="library-section">
-              <div className="section-heading"><div><span className="eyebrow">COLLECTION</span><h2>{view === "favorites" ? "Saved favorites" : "Recently added"}</h2></div><button className="text-action" onClick={() => setView("library")}>Browse library <ChevronDown size={14}/></button></div>
-              {visibleTracks.length ? <div className="media-table">
-                <div className="table-head"><span>#</span><span>TITLE</span><span>TYPE</span><span>STATUS</span><span/></div>
-                {visibleTracks.slice(0, 8).map((track, index) => <div className={track.id === currentId ? "table-row selected-row" : "table-row"} key={track.id}>
-                  <button className="row-number" onClick={() => playTrack(track.id)}>{track.id === currentId && playing ? <AudioLines size={15}/> : <span>{String(index + 1).padStart(2,"0")}</span>}</button>
-                  <button className="row-title" onClick={() => playTrack(track.id)}><span className="mini-art">{track.kind === "video" ? <FileVideo size={15}/> : <Music2 size={15}/>}</span><strong>{track.name}</strong></button>
-                  <span className="type-label">{track.kind.toUpperCase()}</span>
-                  <span className="status-label">{track.id === currentId ? "Now playing" : "In library"}</span>
-                  <button className={favorites.includes(track.id) ? "row-fav selected" : "row-fav"} onClick={() => toggleFavorite(track.id)} aria-label="Favorite"><Heart size={15} fill={favorites.includes(track.id) ? "currentColor" : "none"}/></button>
-                </div>)}
-              </div> : <div className="library-empty"><div className="empty-icon"><FolderOpen size={23}/></div><div><strong>{query ? "No matching media" : "Your library is waiting"}</strong><span>{query ? "Try another search term." : "Add audio or video files to start building your collection."}</span></div><button className="add-button" onClick={() => void openFiles()}><Plus size={15}/> Add media</button></div>}
-            </section>
-            <footer className="footer-note"><span>MADE FOR THE MOMENT.</span><span>MERCI PLAYER <span className="footer-dot">©</span> 2026</span></footer>
-          </div>
-        </main>
-      </div>
-      {error && <div className="toast"><span className="toast-dot"/> {error}<button onClick={() => setError("")}><X size={14}/></button></div>}
-      {dragging && <div className="drop-overlay"><div><FolderOpen size={34}/><strong>Drop your media here</strong><span>Audio and video files are supported</span></div></div>}
-      <input ref={fileInputRef} type="file" accept="audio/*,video/*,.mkv,.flac,.avi" multiple hidden onChange={(e) => {addTracks(Array.from(e.target.files ?? []));e.target.value="";}}/>
-      {current?.kind === "audio" && <audio ref={mediaRef as React.RefObject<HTMLAudioElement>} key={current.id} src={current.url} />}
-    </div>
-  );
+import { useCallback,useEffect,useMemo,useRef,useState } from "react";
+import { AudioLines,AudioWaveform,ChevronLeft,ChevronRight,Disc3,FileImage,FileVideo,FolderOpen,Heart,Image as ImageIcon,ListMusic,Maximize,Pause,Play,Plus,Repeat,Search,Settings2,SkipBack,SkipForward,Subtitles,Volume2,VolumeX,X,Shuffle,Music2,PanelLeftClose,PanelLeftOpen } from "lucide-react";
+type Kind="audio"|"video"|"image";
+type Item={id:string;name:string;url:string;path?:string;kind:Kind};
+type View="player"|"library"|"queue"|"favorites";
+const audio=/\.(mp3|wav|flac|aac|ogg|m4a|wma)$/i,video=/\.(mp4|mkv|avi|mov|webm|m4v)$/i,image=/\.(png|jpe?g|gif|webp|bmp|svg|avif)$/i;
+const stamp=(v:number)=>Number.isFinite(v)?Math.floor(v/60)+":"+String(Math.floor(v%60)).padStart(2,"0"):"0:00";
+const createItem=(f:File|{name:string;url:string;path?:string}):Item|null=>{const kind:Kind|null=audio.test(f.name)?"audio":video.test(f.name)?"video":image.test(f.name)?"image":null;if(!kind)return null;return{id:crypto.randomUUID(),name:f.name,kind,url:"url"in f?f.url:URL.createObjectURL(f),path:"path"in f?f.path:undefined};};
+const EQ_FREQS=[32,64,125,250,500,1000,2000,4000,8000,16000];
+const EQ_LABELS=["32","64","125","250","500","1k","2k","4k","8k","16k"];
+const toVtt=(s:string)=>"WEBVTT\n\n"+s.replace(/^\uFEFF/,"").replace(/\r/g,"").replace(/^(\d+)\s*\n/gm,"").replace(/(\d{2}:\d{2}:\d{2}),(\d{3})/g,"$1.$2");
+export default function App(){
+ const media=useRef<HTMLMediaElement>(null),picker=useRef<HTMLInputElement>(null),subs=useRef<HTMLInputElement>(null);
+ const audioContext=useRef<AudioContext|null>(null),analyser=useRef<AnalyserNode|null>(null),filters=useRef<BiquadFilterNode[]>([]);
+ const [items,setItems]=useState<Item[]>([]),[activeId,setActiveId]=useState<string|null>(null),[playing,setPlaying]=useState(false),[view,setView]=useState<View>("player"),[query,setQuery]=useState(""),[position,setPosition]=useState(0),[duration,setDuration]=useState(0),[volume,setVolume]=useState(.8),[muted,setMuted]=useState(false),[rate,setRate]=useState(1),[repeat,setRepeat]=useState(false),[shuffle,setShuffle]=useState(false),[favorites,setFavorites]=useState<string[]>([]),[subtitle,setSubtitle]=useState<{name:string;url:string}|null>(null),[error,setError]=useState(""),[sidebar,setSidebar]=useState(false),[settings,setSettings]=useState(false),[dragging,setDragging]=useState(false),[eqOpen,setEqOpen]=useState(false),[eqEnabled,setEqEnabled]=useState(true),[eqGains,setEqGains]=useState<number[]>(Array(10).fill(0)),[spectrum,setSpectrum]=useState<number[]>(Array(24).fill(3)),[captions,setCaptions]=useState(true),[metadata,setMetadata]=useState<{title:string|null;artist:string|null;album:string|null;year:number|null;artwork:string|null;duration:number|null;bitrate:number|null}|null>(null);
+ const active=items.find(x=>x.id===activeId)??null;
+ const filtered=useMemo(()=>items.filter(x=>(view!=="favorites"||favorites.includes(x.id))&&x.name.toLowerCase().includes(query.toLowerCase())),[items,view,favorites,query]);
+ const addFiles=useCallback((files:(File|{name:string;url:string;path?:string})[])=>{const valid=files.map(createItem).filter((x):x is Item=>!!x);if(!valid.length){setError("No supported audio, video or image files found.");return;}setError("");setItems(old=>{if(!activeId)setActiveId(valid[0].id);return[...old,...valid];});},[activeId]);
+ const openFiles=useCallback(async()=>{if(window.merci){const files=await window.merci.openFiles();if(files.length)addFiles(files);}else picker.current?.click();},[addFiles]);
+ const select=useCallback((id:string)=>{const selected=items.find(x=>x.id===id);setActiveId(id);setPosition(0);setPlaying(selected?.kind!=="image");setSubtitle(null);setView("player");setError("");},[items]);
+ const step=useCallback((direction:number)=>{if(!items.length)return;const i=items.findIndex(x=>x.id===activeId),n=shuffle?Math.floor(Math.random()*items.length):(i+direction+items.length)%items.length;select(items[n].id);},[items,activeId,shuffle,select]);
+ const toggle=useCallback(()=>{if(!active){void openFiles();return;}if(active.kind!=="image")setPlaying(v=>!v);},[active,openFiles]);
+ useEffect(()=>{const el=media.current;if(!el||!active||active.kind==="image")return;el.volume=muted?0:volume;el.playbackRate=rate;if(playing)void el.play().then(()=>audioContext.current?.resume()).catch(()=>{setPlaying(false);setError("This file could not be played by the built-in media engine.");});else el.pause();},[active,playing,volume,muted,rate]);
+ useEffect(()=>{let cancelled=false;setMetadata(null);if(active?.kind==="audio"&&active.path&&window.merci?.getMetadata){void window.merci.getMetadata(active.path).then(value=>{if(!cancelled)setMetadata(value);});}return()=>{cancelled=true;};},[activeId]);
+ useEffect(()=>{const el=media.current;if(!el||!active||active.kind==="image")return;const Ctx=window.AudioContext;if(!Ctx)return;let ctx:AudioContext;try{ctx=new Ctx();const source=ctx.createMediaElementSource(el);const chain=EQ_FREQS.map(freq=>{const node=ctx.createBiquadFilter();node.type="peaking";node.frequency.value=freq;node.Q.value=1;return node;});const meter=ctx.createAnalyser();meter.fftSize=256;source.connect(chain[0]);chain.forEach((node,i)=>node.connect(chain[i+1]??meter));meter.connect(ctx.destination);audioContext.current=ctx;analyser.current=meter;filters.current=chain;if(playing)void ctx.resume();return()=>{source.disconnect();chain.forEach(node=>node.disconnect());meter.disconnect();void ctx.close();audioContext.current=null;analyser.current=null;filters.current=[];};}catch{setError("Audio processing is unavailable for this media source.");return;}},[activeId]);
+ useEffect(()=>{filters.current.forEach((node,i)=>{node.gain.value=eqEnabled?eqGains[i]:0;});},[eqEnabled,eqGains,activeId]);
+ useEffect(()=>{const meter=analyser.current;if(!meter)return;const bins=new Uint8Array(meter.frequencyBinCount);const timer=window.setInterval(()=>{meter.getByteFrequencyData(bins);setSpectrum(Array.from({length:24},(_,i)=>{const a=Math.floor(i*bins.length/24),b=Math.max(a+1,Math.floor((i+1)*bins.length/24));let sum=0;for(let j=a;j<b;j++)sum+=bins[j];return Math.max(3,Math.round(sum/(b-a)/255*42));}));},60);return()=>window.clearInterval(timer);},[activeId]);
+ useEffect(()=>{const el=media.current;if(!el)return;const t=()=>setPosition(el.currentTime||0),d=()=>setDuration(Number.isFinite(el.duration)?el.duration:0),end=()=>{if(repeat){el.currentTime=0;void el.play();}else step(1);};el.addEventListener("timeupdate",t);el.addEventListener("loadedmetadata",d);el.addEventListener("ended",end);return()=>{el.removeEventListener("timeupdate",t);el.removeEventListener("loadedmetadata",d);el.removeEventListener("ended",end);};},[activeId,repeat,step]);
+ useEffect(()=>{const key=(e:KeyboardEvent)=>{if(["INPUT","TEXTAREA","SELECT"].includes((e.target as HTMLElement).tagName))return;if(e.code==="Space"){e.preventDefault();toggle();}if(e.code==="ArrowRight"&&media.current)media.current.currentTime+=5;if(e.code==="ArrowLeft"&&media.current)media.current.currentTime-=5;if(e.key.toLowerCase()==="f")void document.querySelector(".viewing-surface")?.requestFullscreen();};window.addEventListener("keydown",key);return()=>window.removeEventListener("keydown",key);},[toggle]);
+ const openSubtitle=async(file?:File)=>{if(!file)return;if(!/\.(srt|vtt)$/i.test(file.name)){setError("Please choose an SRT or VTT subtitle file.");return;}const url=URL.createObjectURL(new Blob([file.name.toLowerCase().endsWith(".srt")?toVtt(await file.text()):await file.text()],{type:"text/vtt"}));setSubtitle({name:file.name,url});};
+ useEffect(()=>{const tracks=(media.current as HTMLVideoElement|null)?.textTracks;if(tracks?.length)tracks[0].mode=captions?"showing":"hidden";},[subtitle,captions,activeId]);
+ const seek=(v:number)=>{if(media.current)media.current.currentTime=v;setPosition(v);};
+ const favorite=()=>{if(active)setFavorites(old=>old.includes(active.id)?old.filter(x=>x!==active.id):[...old,active.id]);};
+ const fullscreen=()=>{const el=document.querySelector(".viewing-surface");if(!document.fullscreenElement)void el?.requestFullscreen();else void document.exitFullscreen();};
+ return <div className="app-shell" onDragOver={e=>{e.preventDefault();setDragging(true);}} onDragLeave={e=>{if(e.target===e.currentTarget)setDragging(false);}} onDrop={e=>{e.preventDefault();setDragging(false);addFiles(Array.from(e.dataTransfer.files));}}>
+ <header className="topbar"><div className="brand-mark"><AudioLines size={17}/></div><b className="brand-name">Merci Player</b><span className="top-separator">•</span><span className="window-title">{active?.name??"The media player for everything"}</span></header>
+ <div className="app-body">{sidebar&&<aside className="sidebar"><div className="side-label">YOUR PLAYER</div>{([["player","Now playing",Disc3],["library","Media library",FolderOpen],["queue","Play queue",ListMusic],["favorites","Favorites",Heart]] as const).map(([id,label,Icon])=><button key={id} className={view===id?"nav active":"nav"} onClick={()=>setView(id)}><Icon size={17}/>{label}{id==="library"&&<span>{items.length}</span>}</button>)}<div className="side-bottom">LOCAL MEDIA PLAYER<strong>MERCI PLAYER · 1.0</strong></div></aside>}
+ <main className="main-area"><div className="toolbar"><button className="icon-button" onClick={()=>setSidebar(v=>!v)} aria-label="Toggle sidebar">{sidebar?<PanelLeftClose size={18}/>:<PanelLeftOpen size={18}/>}</button><span className="toolbar-title">{view==="player"?"NOW PLAYING":view==="library"?"MEDIA LIBRARY":view==="queue"?"PLAY QUEUE":"FAVORITES"}</span><div className="toolbar-spacer"/><label className="search"><Search size={15}/><input placeholder="Search media" value={query} onChange={e=>setQuery(e.target.value)}/></label><button className="open-button" onClick={()=>void openFiles()}><Plus size={16}/> Open media</button></div>
+ {view==="player"?<section className="player-page"><div className="viewing-surface">
+ {!active?<div className="welcome-screen"><div className="welcome-logo"><AudioLines size={44}/></div><span>YOUR MEDIA, YOUR MOMENT</span><h1>Press play.<br/>Leave the noise behind.</h1><button className="open-button large" onClick={()=>void openFiles()}><FolderOpen size={17}/> Open media files</button></div>
+ :active.kind==="image"?<div className="image-viewer"><img src={active.url} alt={active.name}/><div className="image-toolbar"><button onClick={()=>step(-1)}><ChevronLeft/></button><span>{active.name}</span><button onClick={()=>step(1)}><ChevronRight/></button></div></div>
+ :active.kind==="video"?<video ref={media as React.RefObject<HTMLVideoElement>} key={active.id} src={active.url} className="media-element" playsInline onClick={toggle}>{subtitle&&<track key={subtitle.url} kind="subtitles" src={subtitle.url} label={subtitle.name} default/>}</video>
+ :<><audio ref={media as React.RefObject<HTMLAudioElement>} key={active.id} src={active.url} className="audio-engine"/><div className="audio-artwork">{metadata?.artwork?<img className="album-art" src={metadata.artwork} alt={metadata.album??"Album artwork"}/>:<div className="vinyl"><div className="vinyl-label"><AudioLines size={48}/></div></div>}</div><div className={playing?"audio-visualizer live":"audio-visualizer"}>{spectrum.map((height,i)=><i key={i} style={{height:height+"px"}}/>)}</div></>}
+ {active&&<div className="surface-top"><span className="media-kind">{active.kind==="video"?<FileVideo size={13}/>:active.kind==="image"?<ImageIcon size={13}/>:<Music2 size={13}/>} {active.kind.toUpperCase()}</span>{active.kind==="video"&&subtitle&&<button className={captions?"caption-toggle on":"caption-toggle"} onClick={()=>setCaptions(v=>!v)} title="Toggle subtitles">CC</button>}<button className="surface-icon" onClick={fullscreen}><Maximize size={17}/></button></div>}</div>
+ <div className="now-playing"><div className="cover-mini">{metadata?.artwork?<img src={metadata.artwork} alt=""/>:active?.kind==="video"?<FileVideo/>:active?.kind==="image"?<FileImage/>:<Music2/>}</div><div className="track-details"><strong>{metadata?.title??active?.name??"Nothing playing"}</strong><span>{active?(metadata?.artist??active.kind.toUpperCase()+" FILE")+(metadata?.album?" · "+metadata.album:""):"Open a file to start playback"}</span></div><button className={active&&favorites.includes(active.id)?"icon-button liked":"icon-button"} onClick={favorite} disabled={!active}><Heart size={19} fill={active&&favorites.includes(active.id)?"currentColor":"none"}/></button></div>
+ <div className="transport-panel">{active?.kind!=="image"&&<div className="timeline"><span>{stamp(position)}</span><input type="range" min="0" max={duration||0} step=".1" value={Math.min(position,duration||0)} onChange={e=>seek(Number(e.target.value))} style={{"--played":(duration?position/duration*100:0)+"%"} as React.CSSProperties}/><span>{stamp(duration)}</span></div>}
+ <div className="control-bar"><div className="control-group"><button className={shuffle?"icon-button active-control":"icon-button"} onClick={()=>setShuffle(v=>!v)} title="Shuffle"><Shuffle size={18}/></button></div><div className="transport-buttons"><button className="icon-button" onClick={()=>step(-1)} title="Previous"><SkipBack size={21} fill="currentColor"/></button><button className="main-play" onClick={toggle} title={playing?"Pause":"Play"}>{playing?<Pause size={22} fill="currentColor"/>:<Play size={22} fill="currentColor"/>}</button><button className="icon-button" onClick={()=>step(1)} title="Next"><SkipForward size={21} fill="currentColor"/></button></div><div className="control-group right"><button className={eqOpen?"icon-button active-control":"icon-button"} onClick={()=>setEqOpen(v=>!v)} title="10-band equalizer"><AudioWaveform size={18}/></button><button className={repeat?"icon-button active-control":"icon-button"} onClick={()=>setRepeat(v=>!v)} title="Repeat"><Repeat size={18}/></button><div className="volume"><button className="icon-button" onClick={()=>setMuted(v=>!v)} title="Mute">{muted?<VolumeX size={19}/>:<Volume2 size={19}/>}</button><input type="range" min="0" max="1" step=".01" value={muted?0:volume} onChange={e=>{setVolume(Number(e.target.value));setMuted(false);}}/></div><button className="icon-button" onClick={()=>setSettings(v=>!v)} title="Settings"><Settings2 size={18}/></button></div></div></div>
+ {eqOpen&&<div className="equalizer-popover"><div className="eq-heading"><div><b>Audio equalizer</b><small>10-band tone control</small></div><label className="eq-switch"><input type="checkbox" checked={eqEnabled} onChange={e=>setEqEnabled(e.target.checked)}/> On</label></div><div className="eq-presets"><button onClick={()=>setEqGains(Array(10).fill(0))}>Flat</button><button onClick={()=>setEqGains([-2,3,5,2,-1,-2,1,3,4,3])}>Bass</button><button onClick={()=>setEqGains([-2,-1,0,2,4,4,2,0,-1,-2])}>Vocal</button><button onClick={()=>setEqGains([3,2,0,-2,-2,0,2,3,3,2])}>Treble</button><button onClick={()=>setEqGains([4,3,1,-2,-3,0,2,4,4,3])}>Rock</button></div><div className="eq-bands">{EQ_FREQS.map((freq,i)=><label key={freq}><span>{eqGains[i]>0?"+":""}{eqGains[i]} dB</span><input aria-label={EQ_LABELS[i]+" Hz"} type="range" min="-12" max="12" step="1" value={eqGains[i]} onChange={e=>setEqGains(old=>old.map((v,j)=>i===j?Number(e.target.value):v))}/><small>{EQ_LABELS[i]}</small></label>)}</div><div className="eq-footer"><span>−12 dB</span><button onClick={()=>setEqGains(Array(10).fill(0))}>Reset</button><span>+12 dB</span></div></div>}
+ {settings&&<div className="settings-popover"><div className="settings-heading"><b>Playback settings</b><button onClick={()=>setSettings(false)}><X size={15}/></button></div><label>Playback speed<select value={rate} onChange={e=>setRate(Number(e.target.value))}>{[.5,.75,1,1.25,1.5,1.75,2].map(x=><option key={x} value={x}>{x}×</option>)}</select></label><div className="settings-row"><span>Subtitles</span><button onClick={()=>subs.current?.click()}><Subtitles size={15}/> Load subtitle</button></div>{subtitle&&<small>Loaded: {subtitle.name}</small>}<small>Supports external SRT and VTT subtitles. Space: play/pause · ←/→: seek · F: fullscreen.</small></div>}
+ </section>:<section className="library-page"><div className="library-heading"><div><span>YOUR COLLECTION</span><h1>{view==="library"?"Media library":view==="queue"?"Play queue":"Your favorites"}</h1><p>{filtered.length} media {filtered.length===1?"file":"files"} in this session</p></div><button className="open-button" onClick={()=>void openFiles()}><Plus size={16}/> Add media</button></div>{filtered.length?<div className="media-grid">{filtered.map(item=><button className={item.id===activeId?"media-card selected":"media-card"} key={item.id} onClick={()=>select(item.id)}><div className="card-art">{item.kind==="image"?<img src={item.url} alt=""/>:item.kind==="video"?<FileVideo size={32}/>:<AudioLines size={32}/>}<span>{item.kind.toUpperCase()}</span></div><strong title={item.name}>{item.name}</strong><small>{item.kind} · Local file</small></button>)}</div>:<div className="empty-library"><FolderOpen size={32}/><strong>No media found</strong><span>Open audio, video or image files to build your collection.</span><button className="open-button" onClick={()=>void openFiles()}><Plus size={15}/> Open media</button></div>}</section>}
+ </main></div>
+ {error&&<div className="toast">{error}<button onClick={()=>setError("")}><X size={15}/></button></div>}{dragging&&<div className="drop-overlay"><FolderOpen size={42}/><strong>Drop your media here</strong><span>Audio · Video · Images</span></div>}
+ <input ref={picker} hidden type="file" multiple accept="audio/*,video/*,image/*,.mkv,.flac,.avi" onChange={e=>{addFiles(Array.from(e.target.files??[]));e.target.value="";}}/><input ref={subs} hidden type="file" accept=".srt,.vtt" onChange={e=>{void openSubtitle(e.target.files?.[0]);e.target.value="";}}/>
+ </div>;
 }
