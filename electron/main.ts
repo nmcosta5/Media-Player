@@ -78,7 +78,7 @@ type LyricsRecord = {
   duration?: number; instrumental?: boolean; plainLyrics?: string | null; syncedLyrics?: string | null;
 };
 const lyricsDirectory = () => path.join(app.getPath("documents"), "MerciPlayer", "Lyrics");
-const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"/\\|?*\x00-\x1f]/g, "_").replace(/[. ]+$/g, "").trim().slice(0, 90) || "Unknown";
+const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"\\|?*\x00-\x1f]/g, "_").replace(/\//g, "_").replace(/[. ]+$/g, "").trim().slice(0, 90) || "Unknown";
 const lyricsHeaders = { "User-Agent": "MerciPlayer/1.0 (https://github.com/nmcosta5/Media-Player)", "Accept": "application/json" };
 
 async function getLyricsForTrack(input: { title: string; artist?: string; album?: string; duration?: number }) {
