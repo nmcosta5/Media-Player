@@ -10,8 +10,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "start": "electron .",
-    "dist:win": "npm run build:icon && npm run build && electron-builder --win",
-    "dist:dir": "npm run build:icon && npm run build && electron-builder --dir",
+    "dist:win": "npm run build:icon && npm run build && electron-builder --win --publish never",
+    "dist:dir": "npm run build:icon && npm run build && electron-builder --dir --publish never",
     "build:icon": "node scripts/create-icon.mjs"
   },
   "dependencies": {
