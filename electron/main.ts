@@ -82,6 +82,7 @@ const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"
 const lyricsHeaders = { "User-Agent": "MerciPlayer/1.0 (https://github.com/nmcosta5/Media-Player)", "Accept": "application/json" };
 let lyricsRequestTail: Promise<void> = Promise.resolve();
 let lyricsLastRequestAt = 0;
+let lyricsRetryAt = 0;
 
 async function getLyricsForTrack(input: { title: string; artist?: string; album?: string; duration?: number }) {
   const title = input.title.trim().slice(0, 240);
@@ -102,14 +103,18 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
   } catch { /* A missing Documents folder is created after a successful download. */ }
   const request = async (url: URL): Promise<{response: Response; data: unknown}> => {
     const task = lyricsRequestTail.then(async () => {
+      const retryWait = Math.max(0, lyricsRetryAt - Date.now());
+      if (retryWait > 0) throw Object.assign(new Error("LRCLIB asked this app to wait before the next request."), { retryAfter: Math.ceil(retryWait / 1000) });
       const delay = Math.max(0, 300 - (Date.now() - lyricsLastRequestAt));
       if (delay > 0) await new Promise<void>(resolve => setTimeout(resolve, delay));
       lyricsLastRequestAt = Date.now();
       const response = await fetch(url, { headers: lyricsHeaders, signal: AbortSignal.timeout(15000) });
       if (!response.ok && response.status !== 404) {
         if (response.status === 429) {
-          const retryAfter = Number(response.headers.get("retry-after") || 30);
-          throw Object.assign(new Error("LRCLIB rate limit reached. Try again shortly."), { retryAfter: Number.isFinite(retryAfter) ? retryAfter : 30 });
+          const retryAfterValue = Number(response.headers.get("retry-after") || 30);
+          const retryAfter = Number.isFinite(retryAfterValue) && retryAfterValue > 0 ? retryAfterValue : 30;
+          lyricsRetryAt = Date.now() + retryAfter * 1000;
+          throw Object.assign(new Error("LRCLIB rate limit reached. Please retry after the indicated delay."), { retryAfter });
         }
         throw new Error("LRCLIB returned HTTP " + response.status);
       }
