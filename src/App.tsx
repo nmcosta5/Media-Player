@@ -1,5 +1,5 @@
 import { useCallback,useEffect,useMemo,useRef,useState } from "react";
-import { AudioLines,AudioWaveform,ChevronLeft,ChevronRight,Disc3,FileImage,FileVideo,FolderOpen,Heart,Image as ImageIcon,ListMusic,Maximize,Minimize,Pause,Play,Plus,Repeat,Search,Settings2,SkipBack,SkipForward,Subtitles,Volume2,VolumeX,X,Shuffle,Music2,PanelLeftClose,PanelLeftOpen,Clock3,ListPlus,Trash2,ArrowUp,ArrowDown,Library,FastForward,Rewind,FolderSearch,Camera,Info,BookmarkPlus,Pin,RotateCw,Sun,Contrast,Timer,PictureInPicture2,MonitorPlay } from "lucide-react";
+import { AudioLines,AudioWaveform,ChevronLeft,ChevronRight,Disc3,FileImage,FileVideo,FolderOpen,Heart,Image as ImageIcon,ListMusic,Maximize,Minimize,Pause,Play,Plus,Repeat,Search,Settings2,SkipBack,SkipForward,Subtitles,Volume2,VolumeX,X,Shuffle,Music2,PanelLeftClose,PanelLeftOpen,Clock3,ListPlus,Trash2,ArrowUp,ArrowDown,Library,FastForward,Rewind,FolderSearch,Camera,Info,BookmarkPlus,Pin,RotateCw,Contrast,PictureInPicture2,MonitorPlay } from "lucide-react";
 
 type Kind = "audio" | "video" | "image";
 type MediaFile = { name:string; url:string; path?:string };
