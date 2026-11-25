@@ -9,6 +9,8 @@ contextBridge.exposeInMainWorld("merci", {
   openFolder: (): Promise<MediaFile[]> => ipcRenderer.invoke("media:open-folder"),
   restoreFiles: (paths: string[]): Promise<MediaFile[]> => ipcRenderer.invoke("media:restore-files", paths),
   findSubtitle: (filePath: string): Promise<{name:string;content:string;path:string}|null> => ipcRenderer.invoke("media:find-subtitle", filePath),
+  saveSnapshot: (dataUrl: string, suggestedName: string): Promise<{canceled:boolean;filePath?:string}> => ipcRenderer.invoke("media:save-snapshot", dataUrl, suggestedName),
+  setAlwaysOnTop: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke("window:always-on-top", enabled),
   minimize: (): Promise<void> => ipcRenderer.invoke("window:minimize"),
   maximize: (): Promise<boolean> => ipcRenderer.invoke("window:maximize"),
   close: (): Promise<void> => ipcRenderer.invoke("window:close"),

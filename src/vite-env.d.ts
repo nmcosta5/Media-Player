@@ -11,6 +11,8 @@ declare global {
       openFolder: () => Promise<MediaFile[]>;
       restoreFiles: (paths: string[]) => Promise<MediaFile[]>;
       findSubtitle: (filePath: string) => Promise<{name:string;content:string;path:string}|null>;
+      saveSnapshot: (dataUrl: string, suggestedName: string) => Promise<{canceled:boolean;filePath?:string}>;
+      setAlwaysOnTop: (enabled: boolean) => Promise<boolean>;
       minimize: () => Promise<void>;
       maximize: () => Promise<boolean>;
       close: () => Promise<void>;
