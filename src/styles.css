@@ -1667,3 +1667,38 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
 .lyrics-appearance strong{min-width:30px;color:#fff;font:600 9px var(--mono);letter-spacing:0}
 .lyrics-scroll .lyric-line{width:100%;max-width:min(1100px,90%)}
 @media(max-width:760px){.lyrics-appearance{width:100%;max-width:none;justify-content:flex-start}.lyrics-appearance input{flex:1;max-width:180px}.lyrics-actions{flex-wrap:wrap}}
+
+
+/* Smooth fullscreen playback: hide every player/lyrics control after inactivity,
+   then restore the complete UI on the next mouse movement. */
+.player-page:fullscreen .now-playing,
+.player-page:fullscreen .transport-panel,
+.player-page:fullscreen .surface-top,
+.player-page:fullscreen .player-queue-button,
+.player-page:fullscreen .floating-panel,
+.player-page:fullscreen .lyrics-header,
+.player-page:fullscreen .lyrics-footer,
+.player-page:fullscreen .lyrics-empty .open-button,
+.player-page:fullscreen .video-center-play{
+  transition:opacity .22s ease,transform .22s ease,visibility .22s ease;
+}
+.player-page:fullscreen.hide-controls .now-playing,
+.player-page:fullscreen.hide-controls .transport-panel,
+.player-page:fullscreen.hide-controls .surface-top,
+.player-page:fullscreen.hide-controls .player-queue-button,
+.player-page:fullscreen.hide-controls .floating-panel,
+.player-page:fullscreen.hide-controls .lyrics-header,
+.player-page:fullscreen.hide-controls .lyrics-footer,
+.player-page:fullscreen.hide-controls .lyrics-empty .open-button,
+.player-page:fullscreen.hide-controls .video-center-play{
+  opacity:0!important;
+  pointer-events:none!important;
+  visibility:hidden!important;
+  transform:translateY(10px)!important;
+}
+.player-page:fullscreen.hide-controls{cursor:none!important}
+.player-page:fullscreen .video-lyrics-stage{
+  -webkit-backdrop-filter:none!important;
+  backdrop-filter:none!important;
+}
+.lyrics-scroll{overscroll-behavior:contain}
