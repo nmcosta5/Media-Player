@@ -17,7 +17,7 @@ const lyricsIdentityFor=(item:Item)=>{
  // Strip common YouTube/video labels and technical quality/codec suffixes.
  for(let index=0;index<5;index++){
   const next=cleaned
-   .replace(/\s*[\[(](?:(?:\d{3,4}\s*p|4k|8k|uhd|fhd|hd\b|official\b|live\s+video\b|music\s+video\b|lyrics?\b|visualizer\b|audio\b|performance\b|session\b)[^\]\)]*[\])]\s*$/i,"")
+   .replace(/\s*[\[(](?:\d{3,4}\s*p|4k|8k|uhd|fhd|hd\b|official\b|live\s+video\b|music\s+video\b|lyrics?\b|visualizer\b|audio\b|performance\b|session\b)[^\]\)]*[\])]\s*$/i,"")
    .trim();
   if(next===cleaned)break;
   cleaned=next;
