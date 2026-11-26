@@ -125,6 +125,11 @@
         "description": "Image files opened with Merci Player",
         "role": "Viewer"
       }
+    ],
+    "asar": true,
+    "compression": "maximum",
+    "electronLanguages": [
+      "en-US"
     ]
   }
 }
