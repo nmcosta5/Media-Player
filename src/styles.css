@@ -1633,3 +1633,26 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
 
 .video-player:fullscreen.hide-video-controls .video-lyrics-stage .lyrics-footer{opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .2s ease,transform .2s ease}
 .video-player:fullscreen .video-lyrics-stage .lyrics-footer{transition:opacity .2s ease,transform .2s ease}
+
+
+/* Performance profile: preserve the cinematic look without continuously
+   repainting large blurred layers while the decoder is rendering video. */
+.lyrics-backdrop{
+  filter:blur(18px) saturate(.78)!important;
+  animation:none!important;
+  transform:scale(1.04)!important;
+}
+.video-lyrics-stage .lyrics-backdrop{
+  filter:blur(18px) saturate(1.12) brightness(.5)!important;
+  animation:none!important;
+  transform:scale(1.04)!important;
+}
+.video-lyrics-stage .lyric-line{
+  transition:opacity .24s ease,color .24s ease,transform .24s ease!important;
+}
+.video-lyrics-stage .lyric-line.past{filter:none!important}
+.media-card,.playlist-card{
+  content-visibility:auto;
+  contain-intrinsic-size:240px 230px;
+  contain:layout style paint;
+}
