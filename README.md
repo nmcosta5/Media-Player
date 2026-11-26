@@ -35,6 +35,7 @@ Merci Player combines a player-first workspace with local media discovery, a per
 - Displays synchronized LRC lyrics with a live highlighted line, with plain lyrics as a fallback.
 - Automatically saves downloaded `.lrc` and `.txt` files under `Documents/MerciPlayer/Lyrics` and reuses the local cache when offline.
 - Lyrics open in an edge-to-edge 7clouds-inspired view with an original bundled seven-cloud sunset wallpaper, large white Edo SZ brush lettering, smooth active-line scrolling, and integrated playback controls.
+- Edo SZ is bundled locally at `public/fonts/edosz.ttf`, so the lyric typeface does not need a remote font CDN or an internet connection.
 - Manually adjust lyric timing in 0.1-second or 0.5-second steps; each track's offset is saved and restored automatically.
 - Lookup retries automatically when the internet connection returns; downloaded lyrics remain available from the local cache.
 - Lyrics can be opened from the top **Lyrics** menu; press `L` to show or hide the lyrics view while audio is active.
