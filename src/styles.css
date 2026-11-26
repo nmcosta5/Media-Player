@@ -1462,3 +1462,34 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
   .topbar .navigation-toggle,.player-mode-button,.lyrics-source,.playlist-composer-backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}
   .playlist-composer-backdrop{background:rgba(4,8,13,.94)}
 }
+
+
+/* Keep the video mounted while lyrics are shown as a readable overlay. */
+.video-frame{position:relative}
+.video-lyrics-stage{
+ position:absolute;inset:0;z-index:8;min-width:0;min-height:0;
+ padding:clamp(12px,2vw,28px);
+ background:rgba(7,11,15,.92);
+ -webkit-backdrop-filter:blur(18px) saturate(130%);
+ backdrop-filter:blur(18px) saturate(130%);
+}
+.video-lyrics-stage .lyrics-backdrop{display:none}
+.video-lyrics-stage .lyrics-header{position:relative;z-index:1;padding-bottom:12px;gap:12px}
+.video-lyrics-stage .lyrics-track{gap:12px}
+.video-lyrics-stage .lyrics-cover{width:48px;height:48px}
+.video-lyrics-stage .lyrics-heading h2{max-width:min(52vw,620px);font-size:clamp(16px,2vw,24px)}
+.video-lyrics-stage .lyrics-heading p{font-size:11px}
+.video-lyrics-stage .lyrics-scroll{padding:clamp(18px,3vh,38px) 12px 26px;gap:12px}
+.video-lyrics-stage .lyric-line{max-width:900px;font-size:clamp(16px,2vw,28px);line-height:1.3}
+.video-lyrics-stage .lyrics-empty{padding:12px}
+.video-lyrics-stage .lyrics-footer{position:relative;z-index:1;padding-top:10px;gap:8px}
+.video-lyrics-stage .lyrics-sync{gap:6px;flex-wrap:wrap}
+.video-lyrics-stage .lyrics-playback{gap:8px}
+.video-lyrics-stage .lyrics-playback .lyrics-track-time{white-space:nowrap}
+@media(max-width:760px){
+ .video-lyrics-stage{padding:10px}
+ .video-lyrics-stage .lyrics-header{align-items:flex-start;flex-direction:column}
+ .video-lyrics-stage .lyrics-heading h2{max-width:78vw}
+ .video-lyrics-stage .lyrics-footer{align-items:flex-start;flex-direction:column}
+ .video-lyrics-stage .lyrics-scroll{padding:12px 6px 18px}
+}
