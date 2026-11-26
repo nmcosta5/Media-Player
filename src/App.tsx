@@ -87,7 +87,7 @@ const seek=(value:number)=>{const target=media.current;const safe=Math.max(0,Mat
  const artist=(track.info?.artist||"").trim();
  const album=(track.info?.album||"").trim();
  const trackDuration=track.info?.duration??(Number.isFinite(duration)&&duration>0?duration:undefined);
- const key=[track.path??track.id,title,artist,album,trackDuration??""].join("|");
+ const key=[track.path??track.id,title,artist,album].join("|");
  if(lyricsRequestKey.current===key)return;
  lyricsRequestKey.current=key;let cancelled=false;setLyricsLoading(true);setLyricsData(null);
  if(!window.merci?.getLyrics){setLyricsLoading(false);setLyricsData({status:"error",message:"Lyrics lookup is available in the desktop application."});return;}
