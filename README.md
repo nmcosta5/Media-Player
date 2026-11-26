@@ -19,6 +19,7 @@ Merci Player combines a player-first workspace with local media discovery, a per
 - VLC-inspired audio transport and YouTube-style video controls, with keyboard shortcuts and a precise draggable red seek timeline.
 - Video controls float over the picture inside a visible liquid-glass dock with play/pause, 10-second skip, volume, captions, settings, mini-player, theater mode, and fullscreen; controls fade while video plays and return on pointer movement or pause.
 - A streamlined player workspace removes the crowded Search / Scan / Queue / Playlists / Open media strip. Open and scan actions remain in the Media menu and library, while collection search is shown inside the library.
+- A dedicated liquid-glass **Tracks** button in the player’s upper-right corner opens the full current queue and shows its track count.
 - Played and buffered progress, hover time preview, and responsive playhead updates.
 - 10-second skip controls, playback speed, repeat, shuffle, and A–B looping.
 - Frame stepping for video, aspect-ratio selection, and fullscreen controls that hide after inactivity.
