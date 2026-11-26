@@ -338,7 +338,7 @@ body{min-width:760px}
 
 /* Full-viewport Spotify-inspired lyrics with persistent manual timing controls */
 .lyrics-stage{position:fixed;inset:0;z-index:10050;padding:clamp(20px,4vw,56px);overflow:hidden;background:radial-gradient(ellipse at 52% 28%,#28343b 0%,#11191e 48%,#070a0c 100%)}
-.lyrics-backdrop{position:absolute;inset:-35px;z-index:-1;background-size:cover;background-position:center;filter:blur(34px) saturate(.72);opacity:.38;transform:scale(1.12)}
+.lyrics-backdrop{position:absolute;inset:-35px;z-index:0;background-size:cover;background-position:center;filter:blur(34px) saturate(.72);opacity:.38;transform:scale(1.12)}
 .lyrics-header{position:relative;z-index:1;align-items:center;padding-bottom:22px;border-bottom-color:#ffffff20}
 .lyrics-heading{display:flex;flex-direction:column;gap:14px}
 .lyrics-back{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;padding:5px 8px;border:1px solid #ffffff22;border-radius:999px;background:#ffffff0c;color:#d6dfe4;font-size:11px}
