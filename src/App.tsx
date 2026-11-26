@@ -4,7 +4,7 @@ import { AudioLines,AudioWaveform,ChevronLeft,ChevronRight,Disc3,FileImage,FileV
 type Kind = "audio" | "video" | "image";
 type MediaFile = { name:string; url:string; path?:string };
 type MediaInfo = {title:string|null;artist:string|null;album:string|null;year:number|null;artwork:string|null;duration:number|null;bitrate:number|null};
-type Item = {id:string;name:string;url:string;path?:string;kind:Kind;thumbnail?:string;info?:MediaInfo|null;metadataLoaded?:boolean};
+type Item = {id:string;name:string;url:string;path?:string;kind:Kind;thumbnail?:string;thumbnailAttempted?:boolean;info?:MediaInfo|null;metadataLoaded?:boolean};
 type View = "player" | "library" | "recent" | "favorites";
 type Drawer = "queue" | "playlists" | null;
 type Subtitle = {name:string;content:string;path?:string};
@@ -79,7 +79,7 @@ const seek=(value:number)=>{const target=media.current;const safe=Math.max(0,Mat
  const favorite=()=>{if(!active)return;const token=active.path??active.id;setFavorites(old=>{const next=old.includes(token)?old.filter(id=>id!==token):[...old,token];try{localStorage.setItem("merci:favorites",JSON.stringify(next));}catch{}return next;});};
  useEffect(()=>{if(!active||active.kind==="image")return;const element=media.current;if(!element)return;element.volume=muted?0:volume;element.playbackRate=rate;const output=element as HTMLMediaElement&{setSinkId?:(id:string)=>Promise<void>};if(outputDevice!=="default"&&output.setSinkId)void output.setSinkId(outputDevice).catch(()=>setError("Could not switch the audio output device."));if(playing)void element.play().then(()=>audioContext.current?.resume()).catch(()=>{setPlaying(false);setError("This file could not be played by the current media engine.");});else element.pause();},[activeId,playing,volume,muted,rate,outputDevice]);
  useEffect(()=>{if(!window.merci)return;const pending=items.filter(item=>item.kind==="audio"&&item.path&&!item.metadataLoaded&&!metadataJobs.current.has(item.id)).slice(0,120);for(const item of pending){metadataJobs.current.add(item.id);void window.merci.getMetadata(item.path!).then(info=>{setItems(old=>old.map(entry=>entry.id===item.id?{...entry,info,thumbnail:info?.artwork??entry.thumbnail,metadataLoaded:true}:entry));}).catch(()=>{setItems(old=>old.map(entry=>entry.id===item.id?{...entry,metadataLoaded:true}:entry));});}},[items]);
- useEffect(()=>{const videoItems=items.filter(item=>item.kind==="video"&&!item.thumbnail&&!thumbnailJobs.current.has(item.id)).slice(0,6);for(const item of videoItems){thumbnailJobs.current.add(item.id);void createVideoThumbnail(item.url).then(thumbnail=>{if(thumbnail)setItems(old=>old.map(entry=>entry.id===item.id&&!entry.thumbnail?{...entry,thumbnail}:entry));});}},[items]);
+ useEffect(()=>{const videoItems=items.filter(item=>item.kind==="video"&&!item.thumbnail&&!item.thumbnailAttempted&&!thumbnailJobs.current.has(item.id)).slice(0,4);for(const item of videoItems){thumbnailJobs.current.add(item.id);void createVideoThumbnail(item.url).then(thumbnail=>{setItems(old=>old.map(entry=>entry.id===item.id?{...entry,thumbnail:thumbnail??entry.thumbnail,thumbnailAttempted:true}:entry));});}},[items]);
  useEffect(()=>{
  const track=active;
  if(!track||track.kind!=="audio"||(track.path&&!track.metadataLoaded)){lyricsRequestKey.current="";setLyricsData(null);setLyricsLoading(false);return;}
