@@ -1702,3 +1702,42 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
   backdrop-filter:none!important;
 }
 .lyrics-scroll{overscroll-behavior:contain}
+
+
+/* Lyrics follow mode: the active timed line stays centered in the reading window. */
+.lyrics-scroll,
+.video-lyrics-stage .lyrics-scroll{
+  justify-content:flex-start!important;
+  scroll-behavior:smooth;
+  scroll-padding-block:45%;
+  padding-top:clamp(38px,7vh,82px);
+  padding-bottom:clamp(38px,7vh,82px);
+  gap:clamp(16px,2.6vh,28px);
+}
+.lyrics-scroll .lyric-line,
+.video-lyrics-stage .lyrics-scroll .lyric-line{
+  flex:0 0 auto;
+  width:100%;
+  max-width:min(1120px,92%);
+  margin-inline:auto;
+  text-align:center;
+  transform-origin:center;
+}
+.lyrics-scroll .lyric-line.current,
+.video-lyrics-stage .lyrics-scroll .lyric-line.current{
+  position:relative;
+  z-index:1;
+  opacity:1;
+  color:#fff;
+  transform:scale(1.045);
+  text-shadow:0 2px 18px rgba(0,0,0,.55),0 0 34px rgba(255,255,255,.2);
+}
+.lyrics-scroll .lyric-line.next,
+.video-lyrics-stage .lyrics-scroll .lyric-line.next{opacity:.72}
+.lyrics-scroll .lyric-line.near,
+.video-lyrics-stage .lyrics-scroll .lyric-line.near{opacity:.42}
+.lyrics-scroll .lyric-line.past,
+.video-lyrics-stage .lyrics-scroll .lyric-line.past{opacity:.2}
+@media(prefers-reduced-motion:reduce){
+  .lyrics-scroll,.video-lyrics-stage .lyrics-scroll{scroll-behavior:auto}
+}
