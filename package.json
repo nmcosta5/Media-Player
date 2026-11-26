@@ -74,6 +74,59 @@
     },
     "portable": {
       "artifactName": "${productName}-${version}-Portable-${arch}.${ext}"
-    }
+    },
+    "fileAssociations": [
+      {
+        "ext": [
+          "mp4",
+          "mkv",
+          "avi",
+          "mov",
+          "webm",
+          "m4v",
+          "mpg",
+          "mpeg",
+          "wmv",
+          "ts"
+        ],
+        "name": "Merci Player Video",
+        "description": "Video files opened with Merci Player",
+        "role": "Viewer",
+        "icon": "build/icon.ico"
+      },
+      {
+        "ext": [
+          "mp3",
+          "wav",
+          "flac",
+          "aac",
+          "ogg",
+          "m4a",
+          "wma",
+          "aiff",
+          "opus"
+        ],
+        "name": "Merci Player Audio",
+        "description": "Audio files opened with Merci Player",
+        "role": "Viewer",
+        "icon": "build/icon.ico"
+      },
+      {
+        "ext": [
+          "png",
+          "jpg",
+          "jpeg",
+          "gif",
+          "webp",
+          "bmp",
+          "avif",
+          "svg"
+        ],
+        "name": "Merci Player Image",
+        "description": "Image files opened with Merci Player",
+        "role": "Viewer",
+        "icon": "build/icon.ico"
+      }
+    ]
   }
 }
