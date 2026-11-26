@@ -199,7 +199,11 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
       const exact = await request(signature);
       if (exact.response.ok && exact.data && typeof exact.data === "object") record = exact.data as LyricsRecord;
     }
-    if (!record) {
+    const hasUsableLyrics = (candidate: LyricsRecord | null) => !!candidate && !candidate.instrumental && (
+      (typeof candidate.syncedLyrics === "string" && candidate.syncedLyrics.trim().length > 0) ||
+      (typeof candidate.plainLyrics === "string" && candidate.plainLyrics.trim().length > 0)
+    );
+    if (!hasUsableLyrics(record)) {
       const search = new URL("https://lrclib.net/api/search");
       if (artist) { search.searchParams.set("track_name", title); search.searchParams.set("artist_name", artist); }
       else search.searchParams.set("q", title);
@@ -207,7 +211,7 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
       const result = await request(search);
       if (!result.response.ok && result.response.status >= 500) return { status: "error", message: "LRCLIB is temporarily unavailable. Please try again shortly." };
       const candidates = Array.isArray(result.data) ? result.data as LyricsRecord[] : [];
-      const normalise = (value: string) => value.toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+      const normalise = (value: string) => value.toLocaleLowerCase().normalize("NFKD").replace(/[\\u0300-\\u036f]/g, "").replace(/[^\\p{L}\\p{N}]+/gu, " ").trim();
       const wantedTitle = normalise(title); const wantedArtist = normalise(artist); const wantedAlbum = normalise(album);
       const ranked = candidates.map(candidate => {
         const candidateTitle = normalise(candidate.trackName ?? candidate.name ?? "");
@@ -219,7 +223,7 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
         if (duration && typeof candidate.duration === "number") score += Math.abs(candidate.duration - duration) <= 2 ? 3 : Math.abs(candidate.duration - duration) <= 8 ? 1 : -2;
         return { candidate, score };
       }).filter(value => value.score >= (wantedArtist ? 8 : 5)).sort((a, b) => b.score - a.score);
-      record = ranked[0]?.candidate ?? null;
+      record = ranked.find(value => hasUsableLyrics(value.candidate))?.candidate ?? ranked[0]?.candidate ?? record;
     }
     if (!record) return { status: "not-found", message: "No matching lyrics were found on LRCLIB." };
     const syncedLyrics = typeof record.syncedLyrics === "string" && record.syncedLyrics.trim() ? record.syncedLyrics : null;
