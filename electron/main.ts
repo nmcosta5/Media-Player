@@ -1,7 +1,6 @@
 import { app, BrowserWindow, dialog, ipcMain, Menu, shell } from "electron";
 import { pathToFileURL } from "node:url";
 import { readdir, readFile, stat, writeFile, mkdir } from "node:fs/promises";
-import { parseFile } from "music-metadata";
 import path from "node:path";
 
 const isDev = !app.isPackaged;
@@ -251,6 +250,7 @@ app.whenReady().then(async () => {
   });
   ipcMain.handle("media:metadata", async (_event, filePath: string) => {
     try {
+      const { parseFile } = await import("music-metadata");
       const metadata = await parseFile(filePath);
       const picture = metadata.common.picture?.[0];
       return {
