@@ -227,7 +227,8 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
     return { status: "error", message: failure.message || "Could not reach LRCLIB.", retryAfter: failure.retryAfter ?? null };
   }
 }
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
+  if (!singleInstanceLock) return;
   ipcMain.on("renderer:ready", () => deliverPendingOpenFiles());
   pendingOpenFiles = [...pendingOpenFiles, ...await filesFromLaunchArgs(process.argv.slice(1))];
   ipcMain.handle("media:open", () => chooseMedia(true));
