@@ -70,7 +70,8 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Merci Player",
-      "artifactName": "${productName}-${version}-Setup-${arch}.${ext}"
+      "artifactName": "${productName}-${version}-Setup-${arch}.${ext}",
+      "perMachine": true
     },
     "portable": {
       "artifactName": "${productName}-${version}-Portable-${arch}.${ext}"
@@ -91,8 +92,7 @@
         ],
         "name": "Merci Player Video",
         "description": "Video files opened with Merci Player",
-        "role": "Viewer",
-        "icon": "build/icon.ico"
+        "role": "Viewer"
       },
       {
         "ext": [
@@ -108,8 +108,7 @@
         ],
         "name": "Merci Player Audio",
         "description": "Audio files opened with Merci Player",
-        "role": "Viewer",
-        "icon": "build/icon.ico"
+        "role": "Viewer"
       },
       {
         "ext": [
@@ -124,8 +123,7 @@
         ],
         "name": "Merci Player Image",
         "description": "Image files opened with Merci Player",
-        "role": "Viewer",
-        "icon": "build/icon.ico"
+        "role": "Viewer"
       }
     ]
   }
