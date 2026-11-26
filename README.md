@@ -34,7 +34,7 @@ Merci Player combines a player-first workspace with local media discovery, a per
 - Automatic LRCLIB lookup for the currently playing audio track, using embedded title, artist, album, and duration metadata where available.
 - Displays synchronized LRC lyrics with a live highlighted line, with plain lyrics as a fallback.
 - Automatically saves downloaded `.lrc` and `.txt` files under `Documents/MerciPlayer/Lyrics` and reuses the local cache when offline.
-- Lyrics open in an edge-to-edge, Spotify-inspired view with album-art ambience, smooth active-line scrolling, and integrated playback controls.
+- Lyrics open in an edge-to-edge 7clouds-inspired view with an original bundled seven-cloud sunset wallpaper, large white Edo SZ brush lettering, smooth active-line scrolling, and integrated playback controls.
 - Manually adjust lyric timing in 0.1-second or 0.5-second steps; each track's offset is saved and restored automatically.
 - Lookup retries automatically when the internet connection returns; downloaded lyrics remain available from the local cache.
 - Lyrics can be opened from the top **Lyrics** menu; press `L` to show or hide the lyrics view while audio is active.
