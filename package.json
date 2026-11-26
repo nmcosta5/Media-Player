@@ -44,7 +44,18 @@
       "dist/**/*",
       "dist-electron/**/*",
       "build/icon.ico",
-      "package.json"
+      "package.json",
+      "!**/*.map",
+      "!**/*.md",
+      "!**/README*",
+      "!**/CHANGELOG*",
+      "!**/test/**",
+      "!**/tests/**",
+      "!**/__tests__/**",
+      "!**/example/**",
+      "!**/examples/**",
+      "!**/benchmark/**",
+      "!**/benchmarks/**"
     ],
     "win": {
       "target": [
@@ -127,7 +138,7 @@
       }
     ],
     "asar": true,
-    "compression": "normal",
+    "compression": "maximum",
     "electronLanguages": [
       "en-US"
     ]
