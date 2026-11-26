@@ -12,6 +12,13 @@ contextBridge.exposeInMainWorld("merci", {
   findSubtitle: (filePath: string): Promise<{name:string;content:string;path:string}|null> => ipcRenderer.invoke("media:find-subtitle", filePath),
   saveSnapshot: (dataUrl: string, suggestedName: string): Promise<{canceled:boolean;filePath?:string}> => ipcRenderer.invoke("media:save-snapshot", dataUrl, suggestedName),
   setAlwaysOnTop: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke("window:always-on-top", enabled),
+  openDefaultAppsSettings: (): Promise<boolean> => ipcRenderer.invoke("window:open-default-apps"),
+  ready: (): void => ipcRenderer.send("renderer:ready"),
+  onOpenFiles: (callback: (files: MediaFile[]) => void) => {
+    const listener = (_event: Electron.IpcRendererEvent, files: MediaFile[]) => callback(files);
+    ipcRenderer.on("media:open-args", listener);
+    return () => ipcRenderer.removeListener("media:open-args", listener);
+  },
   minimize: (): Promise<void> => ipcRenderer.invoke("window:minimize"),
   maximize: (): Promise<boolean> => ipcRenderer.invoke("window:maximize"),
   close: (): Promise<void> => ipcRenderer.invoke("window:close"),

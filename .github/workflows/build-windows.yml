@@ -4,7 +4,7 @@ name: Build Merci Player for Windows
 on:
   workflow_dispatch:
   push:
-    branches: [main, master, redesign/immersive-player, feature/vlc-interface-windows-media-session, feature/complete-player-workflow, fix-native-folder-shortcut, feature/smooth-seek-timeline, feature/lrclib-minimal-player, feature/lyrics-sync-fullscreen-player-controls]
+    branches: [main, master, redesign/immersive-player, feature/vlc-interface-windows-media-session, feature/complete-player-workflow, fix-native-folder-shortcut, feature/smooth-seek-timeline, feature/lrclib-minimal-player, feature/lyrics-sync-fullscreen-player-controls, feature/bottom-video-controls-album-art-previews]
     tags: ["v*"]
     paths:
       - "src/**"

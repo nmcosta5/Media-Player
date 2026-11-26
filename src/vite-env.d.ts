@@ -14,6 +14,9 @@ declare global {
       findSubtitle: (filePath: string) => Promise<{name:string;content:string;path:string}|null>;
       saveSnapshot: (dataUrl: string, suggestedName: string) => Promise<{canceled:boolean;filePath?:string}>;
       setAlwaysOnTop: (enabled: boolean) => Promise<boolean>;
+      openDefaultAppsSettings: () => Promise<boolean>;
+      ready: () => void;
+      onOpenFiles: (callback: (files: MediaFile[]) => void) => () => void;
       minimize: () => Promise<void>;
       maximize: () => Promise<boolean>;
       close: () => Promise<void>;

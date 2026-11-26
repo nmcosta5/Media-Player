@@ -8,21 +8,21 @@ Merci Player combines a player-first workspace with local media discovery, a per
 
 ### Playback and library
 - Local audio, video, and image playback with drag-and-drop importing.
-- Recursive folder scanning for supported local media, with a 12,000-file safety cap.
+- Open folder imports supported local media recursively, with a 12,000-file safety cap.
 - Library search, media-type filters, and sorting by added order, recent playback, or name.
 - Recently played files, favorites, and automatic resume from the last saved position for desktop file paths.
 - Persistent queue and saved playlists, including queue reordering and playlist playback.
-- Embedded audio metadata and artwork; video-frame thumbnails when a frame can be captured.
+- Embedded audio metadata and album artwork, generated cover art for tracks without embedded covers, and real video-frame thumbnails in the media library when a frame can be captured.
 - Windows Media Session metadata and transport actions where the platform supports them.
 
 ### Player controls
 - VLC-inspired audio transport and YouTube-style video controls, with keyboard shortcuts and a precise draggable red seek timeline.
-- Video controls float over the picture inside a visible liquid-glass dock with play/pause, 10-second skip, volume, captions, settings, mini-player, theater mode, and fullscreen; controls fade while video plays and return on pointer movement or pause.
-- A streamlined player workspace removes the crowded Search / Scan / Queue / Playlists / Open media strip. Open and scan actions remain in the Media menu and library, while collection search is shown inside the library.
-- A dedicated liquid-glass **Tracks** button in the player’s upper-right corner opens the full current queue and shows its track count.
+- Video controls stay anchored and visible in the bottom liquid-glass dock during playback and fullscreen, with play/pause, 10-second skip, volume, captions, settings, mini-player, theater mode, and fullscreen.
+- A streamlined player workspace removes the crowded toolbar. Open file and Open folder actions remain available in the Media menu, welcome screen, queue, and library; collection search lives in the media library.
+- A dedicated **Tracks** shortcut opens the complete playback queue and displays its live item count.
 - Played and buffered progress, hover time preview, and responsive playhead updates.
 - 10-second skip controls, playback speed, repeat, shuffle, and A–B looping.
-- Frame stepping for video, aspect-ratio selection, and fullscreen controls that hide after inactivity.
+- Frame stepping for video, aspect-ratio selection, and fullscreen controls that remain available while watching.
 - Fullscreen video uses the full viewport with transport and track information overlaid on top of the picture; previous, play/pause, next, volume, and captions remain accessible.
 - Picture-in-Picture, always-on-top window mode, and video snapshot saving.
 - Per-media bookmarks and a sleep timer.
@@ -41,7 +41,7 @@ Merci Player combines a player-first workspace with local media discovery, a per
 - Edo SZ is bundled locally at `public/fonts/edosz.ttf`, so the lyric typeface does not need a remote font CDN or an internet connection.
 - Manually adjust lyric timing in 0.1-second or 0.5-second steps; each track's offset is saved and restored automatically.
 - Lookup retries automatically when the internet connection returns; downloaded lyrics remain available from the local cache.
-- Lyrics can be opened from the top **Lyrics** menu; press `L` to show or hide the lyrics view while audio is active.
+- Open the dedicated Lyrics mode from the player header or the **Lyrics** menu; press `L` to show or hide it while audio is active. Switch between synchronized and plain lyrics, seek by selecting a timed line, and fine-tune each track’s offset.
 
 ### Subtitles
 - Manual SRT and VTT subtitle loading.
@@ -52,7 +52,7 @@ Merci Player combines a player-first workspace with local media discovery, a per
 
 Downloaded LRCLIB lyrics are stored locally at `%USERPROFILE%\\Documents\\MerciPlayer\\Lyrics` on Windows. LRCLIB is an online service; an existing local lyrics file is loaded without requiring an internet connection.
 
-The current file picker and folder scanner recognize:
+The current file picker and Open folder action recognize:
 
 - **Audio:** MP3, WAV, FLAC, AAC, OGG, M4A, WMA, AIFF, OPUS
 - **Video:** MP4, MKV, AVI, MOV, WebM, M4V, MPG, MPEG, WMV, TS
@@ -95,7 +95,7 @@ Actual audio/video playback depends on codecs supported by the Electron/Chromium
 | Ctrl + B | Add/remove bookmark at current position |
 | Ctrl + Shift + S | Save video snapshot |
 | Ctrl + O | Open file |
-| Ctrl + Shift + O | Open folder / scan |
+| Ctrl + Shift + O | Open folder |
 | Ctrl + Alt + O | Open multiple files |
 | Ctrl + L | Open media library |
 | Ctrl + Shift + P | Create playlist |
@@ -140,4 +140,4 @@ src/            React application and styles
 
 ## Security
 
-The renderer runs with Node integration disabled and context isolation enabled. File selection, folder scanning, metadata, snapshot saving, and window actions are exposed through a constrained preload bridge.
+The renderer runs with Node integration disabled and context isolation enabled. File selection, Open folder, metadata, snapshot saving, and window actions are exposed through a constrained preload bridge. The Windows installer registers supported media extensions for **Open with**; choose Merci Player under Windows Settings → Default apps to make it the default player.

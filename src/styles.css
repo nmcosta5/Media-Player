@@ -1348,3 +1348,117 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
   .media-card.selected,.nav.active,.library-filter-tabs button.selected{outline:1px solid Highlight}
   .player-queue-button,.open-button,.secondary-button,.icon-button,.player-icon{border:1px solid ButtonText}
 }
+
+
+/* Bottom-anchored video UI: keep every playback action in the lower control zone. */
+.video-player .surface-top{display:none!important}
+.video-player .now-playing{
+  top:auto!important;bottom:116px!important;left:18px!important;right:auto!important;
+  z-index:13;max-width:min(58vw,620px);
+}
+.video-player .player-queue-button{
+  top:auto!important;right:18px!important;bottom:112px!important;z-index:14;
+}
+.video-player .transport-panel{
+  position:absolute!important;top:auto!important;left:0;right:0;bottom:0!important;
+  z-index:15;
+}
+.video-player:fullscreen .transport-panel{
+  left:24px!important;right:24px!important;bottom:20px!important;
+}
+.video-player:fullscreen .player-queue-button{
+  top:auto!important;right:24px!important;bottom:124px!important;
+}
+.video-player.hide-video-controls .transport-panel,
+.video-player.hide-video-controls .player-queue-button,
+.video-player.hide-video-controls .now-playing{
+  opacity:1!important;transform:none!important;pointer-events:auto;
+}
+.video-player .transport-panel,.video-player .player-queue-button,.video-player .now-playing{
+  transition:background .2s ease,box-shadow .2s ease,opacity .18s ease;
+}
+
+
+/* Refined navigation, track identity, lyrics mode and playlist creation. */
+.topbar .navigation-toggle{
+  width:34px;height:30px;flex:none;margin-left:2px;display:grid;place-items:center;
+  border:1px solid rgba(255,255,255,.13);border-radius:9px;
+  background:rgba(255,255,255,.055);color:#cbd3da;
+  -webkit-app-region:no-drag;
+  transition:background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.topbar .navigation-toggle:hover{background:rgba(255,255,255,.13);border-color:rgba(255,255,255,.25);color:#fff;transform:translateY(-1px)}
+.topbar .navigation-toggle:active{transform:scale(.96)}
+.surface-top{z-index:10;gap:14px;min-height:38px}
+.surface-title{
+  flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#f4f6f8;font:650 clamp(12px,1.15vw,15px)/1.2 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  letter-spacing:-.15px;text-shadow:0 2px 12px rgba(0,0,0,.55);
+  pointer-events:none;
+}
+.surface-actions{display:flex;align-items:center;gap:7px;margin-right:76px;pointer-events:auto}
+.player-mode-button{
+  height:33px;padding:0 11px;display:inline-flex;align-items:center;gap:7px;
+  border:1px solid rgba(255,255,255,.17);border-radius:999px;
+  background:rgba(22,29,37,.58);color:#e7edf2;font-size:10px;font-weight:650;
+  backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);
+  transition:background .16s ease,border-color .16s ease,transform .16s ease;
+}
+.player-mode-button:hover,.player-mode-button.selected{
+  background:rgba(227,154,118,.23);border-color:rgba(255,214,191,.42);color:#fff;transform:translateY(-1px)
+}
+.player-mode-button:active{transform:scale(.97)}
+.surface-top .surface-icon{width:34px;height:33px;border-radius:50%;background:rgba(18,25,32,.58);backdrop-filter:blur(15px)}
+.lyrics-header{align-items:center}
+.lyrics-track{min-width:0}
+.lyrics-heading{min-width:0}
+.lyrics-heading>div:last-child{min-width:0}
+.lyrics-source{
+  display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:4px 8px;
+  border:1px solid rgba(255,255,255,.13);border-radius:999px;
+  background:rgba(255,255,255,.055);color:#bdc7d0;font:8px var(--mono);letter-spacing:.8px;
+}
+.lyrics-source::before{content:"";width:5px;height:5px;border-radius:50%;background:#91c9a4;box-shadow:0 0 0 3px rgba(145,201,164,.12)}
+.lyrics-actions button:disabled{opacity:.35;cursor:not-allowed}
+.lyrics-actions button.selected{background:rgba(227,154,118,.24);border-color:rgba(255,214,191,.34);color:#fff}
+.playlist-composer-backdrop{
+  position:fixed;z-index:50;inset:0;display:grid;place-items:center;padding:20px;
+  background:rgba(4,8,13,.74);backdrop-filter:blur(18px) saturate(120%);
+  -webkit-backdrop-filter:blur(18px) saturate(120%);animation:mp-fade-in .18s ease both;
+}
+.playlist-composer{
+  width:min(420px,100%);padding:25px;border:1px solid rgba(230,237,244,.18);border-radius:22px;
+  background:linear-gradient(145deg,rgba(35,44,54,.98),rgba(18,24,31,.98));
+  box-shadow:0 30px 100px rgba(0,0,0,.58),inset 0 1px 0 rgba(255,255,255,.09);
+  animation:mp-modal-in .22s cubic-bezier(.2,.75,.25,1) both;
+}
+.playlist-composer-icon{width:48px;height:48px;display:grid;place-items:center;border-radius:15px;background:rgba(227,154,118,.15);color:#f0b08e}
+.playlist-composer .composer-kicker{display:block;margin-top:17px;color:#a9b5c0;font:650 9px var(--mono);letter-spacing:1.6px}
+.playlist-composer h2{margin:7px 0;color:#f3f6f8;font:680 24px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:-.7px}
+.playlist-composer p{margin:0 0 19px;color:#9eabb6;font-size:11px;line-height:1.55}
+.playlist-composer label{display:flex;flex-direction:column;gap:8px;color:#cbd4dc;font-size:10px;font-weight:600}
+.playlist-composer input{
+  height:43px;padding:0 13px;border:1px solid rgba(255,255,255,.16);border-radius:11px;
+  outline:none;background:rgba(255,255,255,.06);color:#f4f6f8;font-size:12px;
+  transition:border-color .16s ease,box-shadow .16s ease,background .16s ease;
+}
+.playlist-composer input:focus{border-color:rgba(227,154,118,.58);background:rgba(255,255,255,.09);box-shadow:0 0 0 3px rgba(227,154,118,.11)}
+.playlist-composer input::placeholder{color:#73808b}
+.composer-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:20px}
+.composer-actions .secondary-button{height:38px;padding:0 14px}
+.composer-actions .open-button{height:38px;padding:0 14px}
+@media(max-width:720px){
+  .surface-top{left:10px;right:10px;top:10px;gap:7px}
+  .surface-actions{margin-right:69px;gap:4px}
+  .surface-title{font-size:11px}
+  .surface-top .surface-icon{width:31px;height:31px}
+  .player-mode-button{height:31px;padding:0 8px;font-size:9px}
+  .lyrics-header{align-items:flex-start;flex-direction:column}
+  .lyrics-track{gap:10px}
+  .lyrics-cover{width:48px;height:48px}
+  .lyrics-actions{align-self:flex-end}
+}
+@media(prefers-reduced-transparency:reduce){
+  .topbar .navigation-toggle,.player-mode-button,.lyrics-source,.playlist-composer-backdrop{backdrop-filter:none;-webkit-backdrop-filter:none}
+  .playlist-composer-backdrop{background:rgba(4,8,13,.94)}
+}
