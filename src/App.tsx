@@ -13,20 +13,20 @@ type LyricsLine = {time:number|null;text:string};
 const parseLrc=(value:string):LyricsLine[]=>{const output:LyricsLine[]=[];for(const line of value.replace(/\r/g,"").split("\n")){const stamps=[...line.matchAll(/\[(\d{1,2}):(\d{2})(?:[.:](\d{1,3}))?\]/g)];const text=line.replace(/\[[^\]]+\]/g,"").trim();if(!text)continue;if(stamps.length){for(const match of stamps){const fraction=(match[3]??"0").padEnd(3,"0").slice(0,3);output.push({time:Number(match[1])*60+Number(match[2])+Number(fraction)/1000,text});}}else if(!/^\[(ar|ti|al|by|re|ve|length|offset):/i.test(line.trim()))output.push({time:null,text});}return output;};
 
 const lyricsIdentityFor=(item:Item)=>{
- let cleaned=item.name.replace(/\\.[^.]+$/,"").replace(/_/g," ").trim();
+ let cleaned=item.name.replace(/\.[^.]+$/,"").replace(/_/g," ").trim();
  // Strip common YouTube/video labels and technical quality/codec suffixes.
  for(let index=0;index<5;index++){
   const next=cleaned
-   .replace(/\\s*[\\[(](?:(?:\\d{3,4}\\s*p|4k|8k|uhd|fhd|hd\\b|official\\b|live\\s+video\\b|music\\s+video\\b|lyrics?\\b|visualizer\\b|audio\\b|performance\\b|session\\b)[^\\])]*[\\])\\s*$/i,"")
+   .replace(/\s*[\[(](?:(?:\d{3,4}\s*p|4k|8k|uhd|fhd|hd\b|official\b|live\s+video\b|music\s+video\b|lyrics?\b|visualizer\b|audio\b|performance\b|session\b)[^\]\)]*[\])]\s*$/i,"")
    .trim();
   if(next===cleaned)break;
   cleaned=next;
  }
  cleaned=cleaned
-  .replace(/\\s+\\b(?:\\d{3,4}p|4k|8k|uhd|fhd|2160p|1440p|1080p|720p)\\b.*$/i,"")
-  .replace(/\\s*[-–—]?\\s*(?:official\\s+)?(?:live\\s+)?(?:music\\s+)?(?:video|visualizer|lyrics|audio)\\s*$/i,"")
-  .replace(/\\s+/g," ").trim();
- const split=cleaned.match(/^(.{1,80}?)\\s+[-–—]\\s+(.{1,180})$/);
+  .replace(/\s+\b(?:\d{3,4}p|4k|8k|uhd|fhd|2160p|1440p|1080p|720p)\b.*$/i,"")
+  .replace(/\s*[-–—]?\s*(?:official\s+)?(?:live\s+)?(?:music\s+)?(?:video|visualizer|lyrics|audio)\s*$/i,"")
+  .replace(/\s+/g," ").trim();
+ const split=cleaned.match(/^(.{1,80}?)\s+[-–—]\s+(.{1,180})$/);
  const guessedArtist=split?.[1]?.trim()??"";
  const guessedTitle=split?.[2]?.trim()??cleaned;
  return {
@@ -35,7 +35,6 @@ const lyricsIdentityFor=(item:Item)=>{
   album:(item.info?.album?.trim()||"").slice(0,240)
  };
 };
-
 type Playlist = {id:string;name:string;paths:string[]};
 const audio=/\.(mp3|wav|flac|aac|ogg|m4a|wma|aiff|opus)$/i;
 const video=/\.(mp4|mkv|avi|mov|webm|m4v|mpg|mpeg|wmv|ts)$/i;
@@ -109,7 +108,7 @@ const seek=(value:number)=>{const target=media.current;const safe=Math.max(0,Mat
  useEffect(()=>{
  const track=active;
  if(!track||track.kind==="image"||(track.kind==="audio"&&track.path&&!track.metadataLoaded)){lyricsRequestKey.current="";setLyricsData(null);setLyricsLoading(false);return;}
- const title=lyricsIdentity?.title||track.name.replace(/\\.[^.]+$/,"").trim();
+ const title=lyricsIdentity?.title||track.name.replace(/\.[^.]+$/,"").trim();
  const artist=lyricsIdentity?.artist||"";
  const album=lyricsIdentity?.album||"";
  const trackDuration=track.info?.duration??(Number.isFinite(duration)&&duration>0?duration:undefined);
