@@ -214,7 +214,7 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
         const candidateArtist = normalise(candidate.artistName ?? "");
         const candidateAlbum = normalise(candidate.albumName ?? "");
         let score = candidateTitle === wantedTitle ? 8 : candidateTitle.includes(wantedTitle) || wantedTitle.includes(candidateTitle) ? 3 : 0;
-        if (wantedArtist) score += candidateArtist === wantedArtist ? 5 : candidateArtist.includes(wantedArtist) || wantedArtist.includes(candidateArtist) ? 2 : -2;
+        if (wantedArtist && candidateArtist) score += candidateArtist === wantedArtist ? 5 : candidateArtist.includes(wantedArtist) || wantedArtist.includes(candidateArtist) ? 2 : -2;
         if (wantedAlbum && candidateAlbum) score += candidateAlbum === wantedAlbum ? 2 : 0;
         if (duration && typeof candidate.duration === "number") score += Math.abs(candidate.duration - duration) <= 2 ? 3 : Math.abs(candidate.duration - duration) <= 8 ? 1 : -2;
         return { candidate, score };
