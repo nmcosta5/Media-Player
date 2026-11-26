@@ -8,6 +8,10 @@ const isDev = !app.isPackaged;
 app.setName("Merci Player");
 if (process.platform === "win32") app.setAppUserModelId("com.merciplayer.desktop");
 let mainWindow: BrowserWindow | null = null;
+let pendingOpenFiles: ReturnType<typeof asMediaFile>[] = [];
+const singleInstanceLock = app.requestSingleInstanceLock();
+if (!singleInstanceLock) app.quit();
+
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -31,9 +35,42 @@ function createWindow() {
   mainWindow.on("closed", () => { mainWindow = null; });
 }
 
-const mediaExtensions = new Set(["mp4","mkv","avi","mov","webm","m4v","mp3","wav","flac","aac","ogg","m4a","wma","png","jpg","jpeg","gif","webp","bmp","avif","svg","svg"]);
+const mediaExtensions = new Set(["mp4","mkv","avi","mov","webm","m4v","mpg","mpeg","wmv","ts","mp3","wav","flac","aac","ogg","m4a","wma","aiff","opus","png","jpg","jpeg","gif","webp","bmp","avif","svg"]);
 const supportedMedia = (filePath: string) => mediaExtensions.has(path.extname(filePath).slice(1).toLowerCase());
 const asMediaFile = (filePath: string) => ({ name: path.basename(filePath), path: filePath, url: pathToFileURL(filePath).href });
+async function filesFromLaunchArgs(args: string[]) {
+  const found: ReturnType<typeof asMediaFile>[] = [];
+  for (const value of args) {
+    if (!value || value.startsWith("-") || !supportedMedia(value)) continue;
+    try {
+      const candidate = path.resolve(value);
+      if ((await stat(candidate)).isFile()) found.push(asMediaFile(candidate));
+    } catch { /* Ignore switches, installer paths and files that no longer exist. */ }
+  }
+  return found;
+}
+function deliverPendingOpenFiles() {
+  if (!mainWindow || !pendingOpenFiles.length) return;
+  const files = pendingOpenFiles.splice(0);
+  mainWindow.webContents.send("media:open-args", files);
+}
+function queueOpenFiles(files: ReturnType<typeof asMediaFile>[]) {
+  if (!files.length) return;
+  pendingOpenFiles.push(...files);
+  if (mainWindow && !mainWindow.webContents.isLoadingMainFrame()) deliverPendingOpenFiles();
+}
+if (singleInstanceLock) {
+  app.on("second-instance", async (_event, commandLine) => {
+    const files = await filesFromLaunchArgs(commandLine.slice(1));
+    if (mainWindow) {
+      if (mainWindow.isMinimized()) mainWindow.restore();
+      mainWindow.show();
+      mainWindow.focus();
+    }
+    queueOpenFiles(files);
+  });
+}
+
 
 async function scanDirectory(root: string) {
   const found: ReturnType<typeof asMediaFile>[] = [];
@@ -104,21 +141,43 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
   const request = async (url: URL): Promise<{response: Response; data: unknown}> => {
     const task = lyricsRequestTail.then(async () => {
       const retryWait = Math.max(0, lyricsRetryAt - Date.now());
-      if (retryWait > 0) throw Object.assign(new Error("LRCLIB asked this app to wait before the next request."), { retryAfter: Math.ceil(retryWait / 1000) });
-      const delay = Math.max(0, 300 - (Date.now() - lyricsLastRequestAt));
+      if (retryWait > 0) throw Object.assign(new Error("LRCLIB rate limit cooldown is active. Try again in " + Math.ceil(retryWait / 1000) + " seconds."), { retryAfter: Math.ceil(retryWait / 1000) });
+      const delay = Math.max(0, 350 - (Date.now() - lyricsLastRequestAt));
       if (delay > 0) await new Promise<void>(resolve => setTimeout(resolve, delay));
       lyricsLastRequestAt = Date.now();
-      const response = await fetch(url, { headers: lyricsHeaders, signal: AbortSignal.timeout(15000) });
-      if (!response.ok && response.status !== 404) {
-        if (response.status === 429) {
-          const retryAfterValue = Number(response.headers.get("retry-after") || 30);
-          const retryAfter = Number.isFinite(retryAfterValue) && retryAfterValue > 0 ? retryAfterValue : 30;
-          lyricsRetryAt = Date.now() + retryAfter * 1000 + Math.random() * retryAfter * 300;
-          throw Object.assign(new Error("LRCLIB rate limit reached. Please retry after the indicated delay."), { retryAfter });
+      const fetchOptions = { signal: AbortSignal.timeout(15000) };
+      let response = await fetch(url, { ...fetchOptions, headers: lyricsHeaders });
+      // A stale or revoked public App ID must not disable anonymous LRCLIB access.
+      if (response.status === 401 && "Lrclib-App-Id" in lyricsHeaders) {
+        const fallbackHeaders = { ...lyricsHeaders };
+        delete (fallbackHeaders as Record<string, string>)["Lrclib-App-Id"];
+        response = await fetch(url, { ...fetchOptions, headers: fallbackHeaders });
+      }
+      if (response.status === 429) {
+        const rawRetry = response.headers.get("retry-after") || "30";
+        const numericRetry = Number(rawRetry);
+        const retryAfter = Number.isFinite(numericRetry) ? Math.max(1, numericRetry) : Math.max(1, (Date.parse(rawRetry) - Date.now()) / 1000);
+        lyricsRetryAt = Date.now() + retryAfter * 1000 + Math.random() * retryAfter * 300;
+        throw Object.assign(new Error("LRCLIB rate limit reached. The app will respect its Retry-After window."), { retryAfter: Math.ceil(retryAfter) });
+      }
+      // LRCLIB can temporarily return 503 during maintenance or load spikes.
+      // Retry once when the server supplies a short Retry-After value.
+      if (response.status === 503) {
+        const rawRetry = response.headers.get("retry-after") || "1";
+        const numericRetry = Number(rawRetry);
+        const retryAfter = Number.isFinite(numericRetry) ? Math.max(1, numericRetry) : Math.max(1, (Date.parse(rawRetry) - Date.now()) / 1000);
+        if (retryAfter <= 4) {
+          await new Promise<void>(resolve => setTimeout(resolve, retryAfter * 1000 + Math.random() * retryAfter * 300));
+          response = await fetch(url, { ...fetchOptions, headers: lyricsHeaders });
         }
+      }
+      if (!response.ok && response.status !== 404) {
+        if (response.status === 503) return { response, data: null };
         throw new Error("LRCLIB returned HTTP " + response.status);
       }
-      return { response, data: response.ok ? await response.json() as unknown : null };
+      const contentType = response.headers.get("content-type") || "";
+      const data = response.ok && contentType.includes("application/json") ? await response.json() as unknown : null;
+      return { response, data };
     });
     lyricsRequestTail = task.then(() => undefined, () => undefined);
     return task;
@@ -141,11 +200,19 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
       if (album) search.searchParams.set("album_name", album);
       const result = await request(search);
       const candidates = Array.isArray(result.data) ? result.data as LyricsRecord[] : [];
-      const normalise = (value: string) => value.toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu, " ").trim();
-      const wantedTitle = normalise(title); const wantedArtist = normalise(artist);
-      record = candidates.find(candidate => normalise(candidate.trackName ?? candidate.name ?? "") === wantedTitle && (!wantedArtist || normalise(candidate.artistName ?? "") === wantedArtist))
-        ?? candidates.find(candidate => normalise(candidate.trackName ?? candidate.name ?? "").includes(wantedTitle))
-        ?? candidates[0] ?? null;
+      const normalise = (value: string) => value.toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
+      const wantedTitle = normalise(title); const wantedArtist = normalise(artist); const wantedAlbum = normalise(album);
+      const ranked = candidates.map(candidate => {
+        const candidateTitle = normalise(candidate.trackName ?? candidate.name ?? "");
+        const candidateArtist = normalise(candidate.artistName ?? "");
+        const candidateAlbum = normalise(candidate.albumName ?? "");
+        let score = candidateTitle === wantedTitle ? 8 : candidateTitle.includes(wantedTitle) || wantedTitle.includes(candidateTitle) ? 3 : 0;
+        if (wantedArtist) score += candidateArtist === wantedArtist ? 5 : candidateArtist.includes(wantedArtist) || wantedArtist.includes(candidateArtist) ? 2 : -2;
+        if (wantedAlbum && candidateAlbum) score += candidateAlbum === wantedAlbum ? 2 : 0;
+        if (duration && typeof candidate.duration === "number") score += Math.abs(candidate.duration - duration) <= 2 ? 3 : Math.abs(candidate.duration - duration) <= 8 ? 1 : -2;
+        return { candidate, score };
+      }).filter(value => value.score >= (wantedArtist ? 8 : 5)).sort((a, b) => b.score - a.score);
+      record = ranked[0]?.candidate ?? null;
     }
     if (!record) return { status: "not-found", message: "No matching lyrics were found on LRCLIB." };
     const syncedLyrics = typeof record.syncedLyrics === "string" && record.syncedLyrics.trim() ? record.syncedLyrics : null;
@@ -161,6 +228,8 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
   }
 }
 app.whenReady().then(() => {
+  ipcMain.on("renderer:ready", () => deliverPendingOpenFiles());
+  pendingOpenFiles = [...pendingOpenFiles, ...await filesFromLaunchArgs(process.argv.slice(1))];
   ipcMain.handle("media:open", () => chooseMedia(true));
   ipcMain.handle("lyrics:get", async (_event, input: unknown) => {
     if (!input || typeof input !== "object") return { status: "invalid", message: "Invalid lyrics request." };
@@ -185,7 +254,7 @@ app.whenReady().then(() => {
   });
   ipcMain.handle("media:open-one", () => chooseMedia(false));
   ipcMain.handle("media:open-folder", async () => {
-    const result = await dialog.showOpenDialog({ title: "Scan media folder", properties: ["openDirectory"] });
+    const result = await dialog.showOpenDialog({ title: "Open media folder", properties: ["openDirectory"] });
     return result.canceled ? [] : scanDirectory(result.filePaths[0]);
   });
   ipcMain.handle("media:restore-files", async (_event, paths: unknown) => {
@@ -228,6 +297,7 @@ app.whenReady().then(() => {
     await writeFile(result.filePath, Buffer.from(match[2], "base64"));
     return { canceled: false, filePath: result.filePath };
   });
+  ipcMain.handle("window:open-default-apps", async () => { if (process.platform === "win32") await shell.openExternal("ms-settings:defaultapps"); else await shell.openPath(app.getPath("home")); return true; });
   ipcMain.handle("window:always-on-top", (_event, enabled: unknown) => {
     if (!mainWindow) return false;
     const value = enabled === true;
