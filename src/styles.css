@@ -334,3 +334,44 @@ body{min-width:760px}
 .player-page:fullscreen .viewing-surface{width:100vw;height:100vh;max-width:none;max-height:none;min-height:0}
 .player-page:fullscreen .video-frame,.player-page:fullscreen .video-frame.default{width:100vw!important;height:100vh!important;max-width:none!important;max-height:none!important}
 .player-page:fullscreen .video-frame .media-element{width:100%!important;height:100%!important;object-fit:contain!important}
+
+
+/* Full-viewport Spotify-inspired lyrics with persistent manual timing controls */
+.lyrics-stage{position:fixed;inset:0;z-index:10050;padding:clamp(20px,4vw,56px);overflow:hidden;background:radial-gradient(ellipse at 52% 28%,#28343b 0%,#11191e 48%,#070a0c 100%)}
+.lyrics-backdrop{position:absolute;inset:-35px;z-index:-1;background-size:cover;background-position:center;filter:blur(34px) saturate(.72);opacity:.38;transform:scale(1.12)}
+.lyrics-header{position:relative;z-index:1;align-items:center;padding-bottom:22px;border-bottom-color:#ffffff20}
+.lyrics-heading{display:flex;flex-direction:column;gap:14px}
+.lyrics-back{display:inline-flex;align-items:center;gap:5px;align-self:flex-start;padding:5px 8px;border:1px solid #ffffff22;border-radius:999px;background:#ffffff0c;color:#d6dfe4;font-size:11px}
+.lyrics-back:hover{background:#ffffff1a}
+.lyrics-track{display:flex;align-items:center;gap:16px}
+.lyrics-cover{width:64px;height:64px;flex:none;display:grid;place-items:center;overflow:hidden;border-radius:7px;background:#202a30;color:#ed9567;box-shadow:0 8px 28px #0008}
+.lyrics-cover img{width:100%;height:100%;object-fit:cover}
+.lyrics-heading h2{max-width:min(60vw,760px);font-size:clamp(20px,2.5vw,30px)}
+.lyrics-heading p{font-size:13px}
+.lyrics-scroll{position:relative;z-index:1;gap:23px;padding:clamp(45px,8vh,100px) 14px 100px;scroll-padding-block:42vh;mask-image:linear-gradient(to bottom,transparent 0,black 12%,black 88%,transparent 100%)}
+.lyric-line{max-width:1000px;font-size:clamp(22px,3.1vw,40px);line-height:1.32;color:#d0d9de;opacity:.48}
+.lyric-line.current{color:#fff;opacity:1;transform:scale(1.025);text-shadow:0 3px 32px #ed793855}
+.lyrics-empty{position:relative;z-index:1}
+.lyrics-footer{position:relative;z-index:2;align-items:center;flex-wrap:wrap;padding-top:15px;border-top-color:#ffffff20}
+.lyrics-sync,.lyrics-playback{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.lyrics-sync>span{margin-right:4px;color:#aeb9bf;font:9px var(--mono);letter-spacing:1px}
+.lyrics-sync button{padding:7px 9px;border:1px solid #ffffff20;border-radius:5px;background:#ffffff0c;color:#e5eaed;font:10px var(--mono)}
+.lyrics-sync button:hover:not(:disabled){background:#ffffff20}
+.lyrics-sync button:disabled{opacity:.35;cursor:default}
+.lyrics-sync strong{min-width:52px;color:#fff;text-align:center;font:600 12px var(--mono);font-variant-numeric:tabular-nums}
+.lyrics-sync .sync-reset{color:#ffb58c}
+.lyrics-playback{gap:10px}
+.lyrics-playback .main-play{width:36px;height:36px}
+.lyrics-track-time{margin:0 8px;color:#c0cbd1;font:10px var(--mono);font-variant-numeric:tabular-nums}
+.lyric-line.unsynced{cursor:default}
+@media(max-width:760px){.lyrics-stage{padding:16px}.lyrics-header{align-items:flex-start;flex-direction:column}.lyrics-heading h2{max-width:80vw}.lyrics-scroll{gap:18px;padding:32px 8px 50px}.lyrics-footer{align-items:flex-start;flex-direction:column}.lyrics-sync{gap:5px}.lyrics-sync button{padding:6px}.lyrics-cover{width:50px;height:50px}}
+/* Fullscreen video uses the complete viewport; metadata and transport float over the picture */
+.player-page:fullscreen .viewing-surface{position:absolute;inset:0;z-index:0;display:block;flex:none;width:100vw;height:100vh;max-width:none;max-height:none;min-height:0;padding:0}
+.player-page:fullscreen .video-frame,.player-page:fullscreen .video-frame.default{position:absolute;inset:0;width:100%!important;height:100%!important;max-width:none!important;max-height:none!important;min-width:0;min-height:0;margin:0;aspect-ratio:auto!important}
+.player-page:fullscreen .video-frame .media-element{display:block;width:100%!important;height:100%!important;max-width:none;max-height:none;object-fit:contain;object-position:center}
+.player-page:fullscreen .now-playing{position:absolute;top:18px;left:20px;z-index:8;width:auto;max-width:min(48vw,560px);height:auto;padding:9px 13px;border:1px solid #ffffff20;border-radius:8px;background:#080b0bc9;backdrop-filter:blur(16px)}
+.player-page:fullscreen .transport-panel{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:38px 28px 18px;background:linear-gradient(transparent,#050708e8 40%);backdrop-filter:none}
+.player-page:fullscreen .surface-top{z-index:10;top:18px;right:20px;left:auto}
+.player-page:fullscreen .control-bar{min-height:58px}
+.player-page:fullscreen .control-group.right{right:0}
+.player-page:fullscreen.hide-controls .now-playing,.player-page:fullscreen.hide-controls .transport-panel,.player-page:fullscreen.hide-controls .surface-top{opacity:0;pointer-events:none;transform:translateY(8px)}
