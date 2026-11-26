@@ -1,5 +1,6 @@
 name: Build Merci Player for Windows
 # Windows CI validates player, media, lyrics, and desktop integration updates.
+# The smooth-playback changes are validated on this existing CI-enabled branch.
 
 on:
   workflow_dispatch:
