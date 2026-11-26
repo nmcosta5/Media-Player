@@ -178,7 +178,7 @@ useEffect(()=>{const video=media.current as HTMLVideoElement|null;if(!video||act
  const lyricOffset=lyricsOffsets[lyricsSyncKey]??0;
  const lyricPlaybackPosition=Math.max(0,position-lyricOffset);
  let currentLyricIndex=-1;for(let index=0;index<lyricsLines.length;index++){if(lyricsLines[index].time!==null&&lyricsLines[index].time!<=lyricPlaybackPosition)currentLyricIndex=index;}
- useEffect(()=>{if(!lyricsOpen||currentLyricIndex<0)return;activeLyricRef.current?.scrollIntoView({behavior:"auto",block:"center"});},[lyricsOpen,currentLyricIndex,lyricsLines.length]);
+ useEffect(()=>{if(!lyricsOpen||currentLyricIndex<0)return;activeLyricRef.current?.scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"auto":"smooth",block:"center",inline:"nearest"});},[lyricsOpen,currentLyricIndex,lyricsLines.length]);
  const findLyrics=()=>{lyricsRequestKey.current="";setLyricsRetry(value=>value+1);setLyricsOpen(true);};
  const adjustLyricsSync=(delta:number)=>{if(!lyricsSyncKey)return;setLyricsOffsets(old=>{const next={...old,[lyricsSyncKey]:Math.max(-15,Math.min(15,Math.round(((old[lyricsSyncKey]??0)+delta)*100)/100))};try{localStorage.setItem("merci:lyrics-offsets",JSON.stringify(next));}catch{}return next;});};
  useEffect(()=>{const retryWhenOnline=()=>{if(!navigator.onLine)return;lyricsRequestKey.current="";setLyricsRetry(value=>value+1);};window.addEventListener("online",retryWhenOnline);return()=>window.removeEventListener("online",retryWhenOnline);},[]);
