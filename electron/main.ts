@@ -9,11 +9,13 @@ app.setName("Merci Player");
 if (process.platform === "win32") app.setAppUserModelId("com.merciplayer.desktop");
 let mainWindow: BrowserWindow | null = null;
 let pendingOpenFiles: ReturnType<typeof asMediaFile>[] = [];
+let rendererReady = false;
 const singleInstanceLock = app.requestSingleInstanceLock();
 if (!singleInstanceLock) app.quit();
 
 
 function createWindow() {
+  rendererReady = false;
   mainWindow = new BrowserWindow({
     width: 1440, height: 900, minWidth: 760, minHeight: 560,
     backgroundColor: "#08090a", title: "Merci Player",
@@ -50,7 +52,7 @@ async function filesFromLaunchArgs(args: string[]) {
   return found;
 }
 function deliverPendingOpenFiles() {
-  if (!mainWindow || !pendingOpenFiles.length) return;
+  if (!rendererReady || !mainWindow || mainWindow.webContents.isLoadingMainFrame() || !pendingOpenFiles.length) return;
   const files = pendingOpenFiles.splice(0);
   mainWindow.webContents.send("media:open-args", files);
 }
@@ -146,17 +148,20 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
       if (delay > 0) await new Promise<void>(resolve => setTimeout(resolve, delay));
       lyricsLastRequestAt = Date.now();
       const fetchOptions = { signal: AbortSignal.timeout(15000) };
-      let response = await fetch(url, { ...fetchOptions, headers: lyricsHeaders });
+      let requestHeaders: Record<string, string> = { ...lyricsHeaders };
+      let response = await fetch(url, { ...fetchOptions, headers: requestHeaders });
       // A stale or revoked public App ID must not disable anonymous LRCLIB access.
-      if (response.status === 401 && "Lrclib-App-Id" in lyricsHeaders) {
-        const fallbackHeaders = { ...lyricsHeaders };
-        delete (fallbackHeaders as Record<string, string>)["Lrclib-App-Id"];
-        response = await fetch(url, { ...fetchOptions, headers: fallbackHeaders });
+      if (response.status === 401 && "Lrclib-App-Id" in requestHeaders) {
+        const fallbackHeaders = { ...requestHeaders };
+        delete fallbackHeaders["Lrclib-App-Id"];
+        requestHeaders = fallbackHeaders;
+        response = await fetch(url, { ...fetchOptions, headers: requestHeaders });
       }
       if (response.status === 429) {
         const rawRetry = response.headers.get("retry-after") || "30";
         const numericRetry = Number(rawRetry);
-        const retryAfter = Number.isFinite(numericRetry) ? Math.max(1, numericRetry) : Math.max(1, (Date.parse(rawRetry) - Date.now()) / 1000);
+        const parsedRetry = Number.isFinite(numericRetry) ? numericRetry : (Date.parse(rawRetry) - Date.now()) / 1000;
+        const retryAfter = Number.isFinite(parsedRetry) ? Math.max(1, parsedRetry) : 30;
         lyricsRetryAt = Date.now() + retryAfter * 1000 + Math.random() * retryAfter * 300;
         throw Object.assign(new Error("LRCLIB rate limit reached. The app will respect its Retry-After window."), { retryAfter: Math.ceil(retryAfter) });
       }
@@ -165,14 +170,15 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
       if (response.status === 503) {
         const rawRetry = response.headers.get("retry-after") || "1";
         const numericRetry = Number(rawRetry);
-        const retryAfter = Number.isFinite(numericRetry) ? Math.max(1, numericRetry) : Math.max(1, (Date.parse(rawRetry) - Date.now()) / 1000);
+        const parsedRetry = Number.isFinite(numericRetry) ? numericRetry : (Date.parse(rawRetry) - Date.now()) / 1000;
+        const retryAfter = Number.isFinite(parsedRetry) ? Math.max(1, parsedRetry) : 1;
         if (retryAfter <= 4) {
           await new Promise<void>(resolve => setTimeout(resolve, retryAfter * 1000 + Math.random() * retryAfter * 300));
-          response = await fetch(url, { ...fetchOptions, headers: lyricsHeaders });
+          response = await fetch(url, { ...fetchOptions, headers: requestHeaders });
         }
       }
       if (!response.ok && response.status !== 404) {
-        if (response.status === 503) return { response, data: null };
+        if (response.status >= 500) return { response, data: null };
         throw new Error("LRCLIB returned HTTP " + response.status);
       }
       const contentType = response.headers.get("content-type") || "";
@@ -199,6 +205,7 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
       else search.searchParams.set("q", title);
       if (album) search.searchParams.set("album_name", album);
       const result = await request(search);
+      if (!result.response.ok && result.response.status >= 500) return { status: "error", message: "LRCLIB is temporarily unavailable. Please try again shortly." };
       const candidates = Array.isArray(result.data) ? result.data as LyricsRecord[] : [];
       const normalise = (value: string) => value.toLocaleLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^\p{L}\p{N}]+/gu, " ").trim();
       const wantedTitle = normalise(title); const wantedArtist = normalise(artist); const wantedAlbum = normalise(album);
@@ -229,7 +236,7 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
 }
 app.whenReady().then(async () => {
   if (!singleInstanceLock) return;
-  ipcMain.on("renderer:ready", () => deliverPendingOpenFiles());
+  ipcMain.on("renderer:ready", () => { rendererReady = true; deliverPendingOpenFiles(); });
   pendingOpenFiles = [...pendingOpenFiles, ...await filesFromLaunchArgs(process.argv.slice(1))];
   ipcMain.handle("media:open", () => chooseMedia(true));
   ipcMain.handle("lyrics:get", async (_event, input: unknown) => {
