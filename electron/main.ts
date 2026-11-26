@@ -79,7 +79,7 @@ type LyricsRecord = {
 };
 const lyricsDirectory = () => path.join(app.getPath("documents"), "MerciPlayer", "Lyrics");
 const safeLyricsName = (value: string) => value.normalize("NFKC").replace(/[<>:"\\|?*\x00-\x1f]/g, "_").replace(/\//g, "_").replace(/[. ]+$/g, "").trim().slice(0, 90) || "Unknown";
-const lyricsHeaders = { "User-Agent": "MerciPlayer/1.0 (https://github.com/nmcosta5/Media-Player)", "Accept": "application/json" };
+const lyricsHeaders = { "User-Agent": "MerciPlayer/1.0 (https://github.com/nmcosta5/Media-Player)", "Lrclib-Client": "Merci Player/1.0 (https://github.com/nmcosta5/Media-Player)", "Lrclib-App-Id": "Kr9q8mN_4Whs-GIFOis7imxakHza-9Iba1nAkA1hFbc", "Accept": "application/json" };
 let lyricsRequestTail: Promise<void> = Promise.resolve();
 let lyricsLastRequestAt = 0;
 let lyricsRetryAt = 0;
@@ -113,7 +113,7 @@ async function getLyricsForTrack(input: { title: string; artist?: string; album?
         if (response.status === 429) {
           const retryAfterValue = Number(response.headers.get("retry-after") || 30);
           const retryAfter = Number.isFinite(retryAfterValue) && retryAfterValue > 0 ? retryAfterValue : 30;
-          lyricsRetryAt = Date.now() + retryAfter * 1000;
+          lyricsRetryAt = Date.now() + retryAfter * 1000 + Math.random() * retryAfter * 300;
           throw Object.assign(new Error("LRCLIB rate limit reached. Please retry after the indicated delay."), { retryAfter });
         }
         throw new Error("LRCLIB returned HTTP " + response.status);
