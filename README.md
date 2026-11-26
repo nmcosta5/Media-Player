@@ -2,7 +2,7 @@
 
 **A focused, VLC-inspired desktop media player for Windows.** Built with Electron, React, TypeScript, and Vite.
 
-Merci Player combines a player-first workspace with local media discovery, a persistent playback queue, saved playlists, subtitle tools, and advanced audio/video controls. Its visual system uses graphite surfaces, soft neutral text, and a warm orange accent.
+Merci Player combines a player-first workspace with local media discovery, a persistent playback queue, saved playlists, subtitle tools, and advanced audio/video controls. Its visual system uses deep graphite surfaces, system-first typography, a restrained warm accent, and carefully layered translucent controls.
 
 ## Features
 
@@ -60,6 +60,15 @@ The current file picker and folder scanner recognize:
 - **External subtitles:** SRT and VTT
 
 Actual audio/video playback depends on codecs supported by the Electron/Chromium media engine on the target Windows installation. This is not a bundled libVLC engine, so format recognition does not guarantee that every codec/container combination will decode.
+
+
+### Visual design and motion
+- Apple Human Interface Guidelines-inspired visual direction adapted for a Windows Electron desktop app: content stays central, while glass is reserved for important controls, navigation, and floating panels.
+- System-first typography and a local font stack keep the main interface readable and avoid a remote font dependency; the bundled Edo SZ typeface remains dedicated to lyrics.
+- Consistent rounded surfaces, measured spacing, clear focus rings, and restrained warm accents unify the player, library, menus, dialogs, queue, equalizer, and lyrics.
+- Purposeful motion provides fast feedback for opening panels, switching views, hovering media cards, and revealing artwork without making routine actions wait.
+- Respects the operating system's reduced-motion preference and includes a reduced-transparency fallback; core states are not communicated by motion alone.
+- Design references: [Apple Materials](https://developer.apple.com/design/human-interface-guidelines/materials), [Motion](https://developer.apple.com/design/human-interface-guidelines/motion), [Layout](https://developer.apple.com/design/human-interface-guidelines/layout), and [Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility).
 
 ## Keyboard shortcuts
 
