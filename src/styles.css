@@ -1630,3 +1630,6 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
  .video-lyrics-stage .lyrics-backdrop{animation:none}
  .video-lyrics-stage .lyric-line{transition:none}
 }
+
+.video-player:fullscreen.hide-video-controls .video-lyrics-stage .lyrics-footer{opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .2s ease,transform .2s ease}
+.video-player:fullscreen .video-lyrics-stage .lyrics-footer{transition:opacity .2s ease,transform .2s ease}
