@@ -1741,3 +1741,14 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
 @media(prefers-reduced-motion:reduce){
   .lyrics-scroll,.video-lyrics-stage .lyrics-scroll{scroll-behavior:auto}
 }
+
+
+/* Large queues can contain thousands of rows. Skip off-screen row layout/paint
+   until the user scrolls them into view, just as the library grid already does. */
+.drawer-track{
+  content-visibility:auto;
+  contain-intrinsic-size:64px;
+  contain:layout style paint;
+}
+.drawer-list{overflow-anchor:auto;overscroll-behavior:contain}
+.media-card img,.drawer-track img{content-visibility:auto}
