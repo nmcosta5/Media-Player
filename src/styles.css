@@ -474,3 +474,10 @@ body{min-width:760px}
 @media(prefers-reduced-motion:reduce){
  .video-player .transport-panel,.video-player .now-playing,.video-player .surface-top,.youtube-volume,.player-icon{transition:none!important}
 }
+
+
+.video-center-play{position:absolute;z-index:6;left:50%;top:50%;width:76px;height:76px;display:grid;place-items:center;padding-left:4px;transform:translate(-50%,-50%);border:1px solid #ffffff55;border-radius:50%;background:#0b0b0b99;color:#fff;box-shadow:0 5px 25px #0008;backdrop-filter:blur(5px);transition:transform .16s ease,background .16s ease,opacity .16s ease}
+.video-center-play:hover{transform:translate(-50%,-50%) scale(1.08);background:#212121dc}
+.video-center-play:active{transform:translate(-50%,-50%) scale(.96)}
+.video-player.hide-video-controls .video-center-play{opacity:0;pointer-events:none}
+@media(max-width:720px){.video-center-play{width:60px;height:60px}.video-center-play svg{width:27px;height:27px}}
