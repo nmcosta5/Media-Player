@@ -1493,3 +1493,143 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
  .video-lyrics-stage .lyrics-footer{align-items:flex-start;flex-direction:column}
  .video-lyrics-stage .lyrics-scroll{padding:12px 6px 18px}
 }
+
+
+/* Cinematic, 7clouds-inspired lyric presentation: artwork/video ambience,
+   oversized readable lines, and a soft focus gradient around the active line. */
+.video-lyrics-stage{
+  background:rgba(5,8,12,.38)!important;
+  isolation:isolate;
+  overflow:hidden;
+}
+.video-lyrics-stage .lyrics-backdrop{
+  display:block!important;
+  position:absolute;inset:-7%;
+  z-index:-2;
+  background-size:cover;background-position:center;
+  filter:blur(25px) saturate(1.28) brightness(.55);
+  opacity:.82;transform:scale(1.1);
+  animation:lyrics-backdrop-drift 28s ease-in-out infinite alternate;
+}
+.video-lyrics-stage::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+   radial-gradient(ellipse at 50% 46%,rgba(16,20,27,.2) 0%,rgba(5,8,12,.55) 62%,rgba(3,5,8,.83) 100%),
+   linear-gradient(180deg,rgba(3,5,8,.62),transparent 30%,transparent 68%,rgba(3,5,8,.78));
+}
+.video-lyrics-stage .lyrics-header{
+  border:0;align-items:center;padding:4px 4px 16px;
+  background:linear-gradient(180deg,rgba(4,7,10,.32),transparent);
+}
+.video-lyrics-stage .lyrics-heading{gap:12px}
+.video-lyrics-stage .lyrics-back{
+  border-color:#ffffff25;background:rgba(12,17,23,.34);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.video-lyrics-stage .lyrics-track{gap:13px}
+.video-lyrics-stage .lyrics-cover{
+  width:54px;height:54px;border:1px solid #ffffff32;border-radius:10px;
+  box-shadow:0 10px 36px #0008;
+}
+.video-lyrics-stage .lyrics-heading h2{
+  max-width:min(58vw,720px);font-size:clamp(17px,2.15vw,26px);
+  letter-spacing:-.65px;text-shadow:0 2px 20px #000a;
+}
+.video-lyrics-stage .lyrics-heading p{color:#e0e5e9;font-size:12px;text-shadow:0 2px 14px #000}
+.video-lyrics-stage .lyrics-heading>div:last-child>span{
+  display:block;color:#f0b79a;font:700 8px var(--mono);
+  letter-spacing:2px;margin-bottom:3px;
+}
+.video-lyrics-stage .lyrics-source{
+  margin-top:3px;background:rgba(255,255,255,.08);backdrop-filter:blur(10px);
+}
+.video-lyrics-stage .lyrics-actions button{
+  height:32px;border-radius:999px;border-color:#ffffff2c;
+  background:rgba(8,12,17,.36);color:#e7edf1;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+}
+.video-lyrics-stage .lyrics-actions button.selected{
+  color:#fff;border-color:#ffffff72;
+  background:rgba(255,255,255,.18);
+}
+.video-lyrics-stage .lyrics-scroll{
+  justify-content:flex-start;gap:clamp(12px,2.4vh,24px);
+  padding:clamp(34px,7vh,86px) 18px clamp(42px,8vh,90px);
+  scroll-padding-block:40vh;
+  mask-image:linear-gradient(to bottom,transparent 0,black 16%,black 84%,transparent 100%);
+}
+.video-lyrics-stage .lyric-line{
+  max-width:min(1100px,90%);font-size:clamp(23px,4.1vw,52px);
+  line-height:1.18;letter-spacing:-1.2px;font-weight:800;
+  color:#f2f5f7;opacity:.28;
+  text-shadow:0 2px 18px rgba(0,0,0,.55);
+  transition:opacity .42s ease,color .42s ease,transform .42s ease,text-shadow .42s ease,filter .42s ease;
+}
+.video-lyrics-stage .lyric-line.past{opacity:.16;filter:blur(.2px)}
+.video-lyrics-stage .lyric-line.near{opacity:.48;transform:scale(.985)}
+.video-lyrics-stage .lyric-line.next{opacity:.7;color:#fff;transform:scale(1.005)}
+.video-lyrics-stage .lyric-line.current{
+  opacity:1;color:#fff;transform:scale(1.035);
+  text-shadow:0 3px 35px rgba(0,0,0,.8),0 0 42px rgba(255,255,255,.14);
+}
+.video-lyrics-stage .lyric-line.future{opacity:.23}
+.video-lyrics-stage .lyrics-empty{
+  color:#f0f3f6;text-shadow:0 2px 18px #000;
+}
+.video-lyrics-stage .lyrics-empty span{color:#d1d9df}
+.video-lyrics-stage .lyrics-footer{
+  border:0;padding:12px 8px 4px;
+  background:linear-gradient(0deg,rgba(4,7,10,.52),transparent);
+}
+.video-lyrics-stage .lyrics-sync button,
+.video-lyrics-stage .lyrics-playback .icon-button{
+  border:1px solid #ffffff2b;border-radius:999px;
+  background:rgba(8,12,17,.36);backdrop-filter:blur(12px);
+}
+.video-lyrics-stage .lyrics-playback .main-play{
+  width:40px;height:40px;box-shadow:0 4px 22px #0007;
+}
+.video-lyrics-stage .lyrics-track-time{color:#fff;text-shadow:0 2px 10px #000}
+@keyframes lyrics-backdrop-drift{
+  from{transform:scale(1.1) translate3d(-.5%,0,0)}
+  to{transform:scale(1.18) translate3d(.7%,-.5%,0)}
+}
+
+/* A dedicated navigation affordance lives inside the player's top edge. */
+.player-navigation-button{
+  pointer-events:auto;flex:none;height:34px;padding:0 12px;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  border:1px solid rgba(255,255,255,.2);border-radius:999px;
+  background:rgba(12,18,24,.56);color:#f0f4f7;
+  font-size:11px;font-weight:650;letter-spacing:.1px;
+  backdrop-filter:blur(16px) saturate(145%);
+  -webkit-backdrop-filter:blur(16px) saturate(145%);
+  box-shadow:0 3px 18px rgba(0,0,0,.18);
+  transition:background .18s ease,border-color .18s ease,transform .18s ease;
+}
+.player-navigation-button:hover{
+  background:rgba(39,49,60,.82);border-color:rgba(255,255,255,.38);
+  transform:translateY(-1px);
+}
+.player-navigation-button:active{transform:scale(.97)}
+.video-player .surface-top{justify-content:flex-start;gap:12px}
+.video-player .surface-title{flex:1}
+.video-player .surface-actions{margin-left:auto}
+@media(max-width:640px){
+ .player-navigation-button{width:36px;padding:0}
+ .player-navigation-button span{display:none}
+ .video-lyrics-stage{padding:10px!important}
+ .video-lyrics-stage .lyrics-header{align-items:flex-start;gap:9px}
+ .video-lyrics-stage .lyrics-track{gap:9px}
+ .video-lyrics-stage .lyrics-cover{width:42px;height:42px}
+ .video-lyrics-stage .lyrics-scroll{padding:20px 8px 30px;gap:14px}
+ .video-lyrics-stage .lyric-line{max-width:96%;font-size:clamp(20px,5.6vw,34px);letter-spacing:-.55px}
+ .video-lyrics-stage .lyrics-footer{gap:7px}
+}
+@media(prefers-reduced-motion:reduce){
+ .video-lyrics-stage .lyrics-backdrop{animation:none}
+ .video-lyrics-stage .lyric-line{transition:none}
+}
+
+.video-player:fullscreen.hide-video-controls .video-lyrics-stage .lyrics-footer{opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .2s ease,transform .2s ease}
+.video-player:fullscreen .video-lyrics-stage .lyrics-footer{transition:opacity .2s ease,transform .2s ease}
