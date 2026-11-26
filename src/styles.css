@@ -1633,3 +1633,37 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
 
 .video-player:fullscreen.hide-video-controls .video-lyrics-stage .lyrics-footer{opacity:0;pointer-events:none;transform:translateY(12px);transition:opacity .2s ease,transform .2s ease}
 .video-player:fullscreen .video-lyrics-stage .lyrics-footer{transition:opacity .2s ease,transform .2s ease}
+
+
+/* Performance profile: preserve the cinematic look without continuously
+   repainting large blurred layers while the decoder is rendering video. */
+.lyrics-backdrop{
+  filter:blur(18px) saturate(.78)!important;
+  animation:none!important;
+  transform:scale(1.04)!important;
+}
+.video-lyrics-stage .lyrics-backdrop{
+  filter:blur(18px) saturate(1.12) brightness(.5)!important;
+  animation:none!important;
+  transform:scale(1.04)!important;
+}
+.video-lyrics-stage .lyric-line{
+  transition:opacity .24s ease,color .24s ease,transform .24s ease!important;
+}
+.video-lyrics-stage .lyric-line.past{filter:none!important}
+.media-card,.playlist-card{
+  content-visibility:auto;
+  contain-intrinsic-size:240px 230px;
+  contain:layout style paint;
+}
+
+
+/* 7clouds Lyrics Studio: user-adjustable cinematic presentation controls. */
+.lyrics-stage .lyrics-backdrop,.video-lyrics-stage .lyrics-backdrop{filter:blur(18px) saturate(1.12) brightness(var(--lyrics-backdrop-brightness,.5))!important}
+.lyrics-actions button:disabled{opacity:.32;cursor:not-allowed}
+.lyrics-actions button{min-width:34px}
+.lyrics-appearance{display:flex;align-items:center;gap:9px;min-width:150px;max-width:240px;color:#d6dfe6;font:700 8px var(--mono);letter-spacing:1px}
+.lyrics-appearance input{width:84px;min-width:50px;accent-color:#e4ad91;cursor:pointer}
+.lyrics-appearance strong{min-width:30px;color:#fff;font:600 9px var(--mono);letter-spacing:0}
+.lyrics-scroll .lyric-line{width:100%;max-width:min(1100px,90%)}
+@media(max-width:760px){.lyrics-appearance{width:100%;max-width:none;justify-content:flex-start}.lyrics-appearance input{flex:1;max-width:180px}.lyrics-actions{flex-wrap:wrap}}
