@@ -1229,8 +1229,9 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
   background:rgba(27,35,44,.94);color:#f0f3f6;
   box-shadow:0 16px 45px rgba(0,0,0,.38);
   backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  animation:mp-toast-in .22s cubic-bezier(.2,.75,.25,1) both;
 }
+.toast{animation:mp-toast-in .22s cubic-bezier(.2,.75,.25,1) both}
+.status-toast{animation:mp-status-toast-in .22s cubic-bezier(.2,.75,.25,1) both}
 .toast button,.status-toast button{border-radius:7px;color:#c7d0d9}
 .toast button:hover,.status-toast button:hover{background:rgba(255,255,255,.1);color:#fff}
 .drop-overlay{
@@ -1276,6 +1277,7 @@ button:focus:not(:focus-visible),input:focus:not(:focus-visible),select:focus:no
 }
 @keyframes mp-sidebar-in{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:translateX(0)}}
 @keyframes mp-toast-in{from{opacity:0;transform:translate(-50%,8px)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes mp-status-toast-in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 @keyframes mp-fade-in{from{opacity:0}to{opacity:1}}
 @keyframes mp-logo-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 
