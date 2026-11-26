@@ -481,3 +481,5 @@ body{min-width:760px}
 .video-center-play:active{transform:translate(-50%,-50%) scale(.96)}
 .video-player.hide-video-controls .video-center-play{opacity:0;pointer-events:none}
 @media(max-width:720px){.video-center-play{width:60px;height:60px}.video-center-play svg{width:27px;height:27px}}
+
+.video-player .surface-top{display:none}
