@@ -16,7 +16,8 @@ Merci Player combines a player-first workspace with local media discovery, a per
 - Windows Media Session metadata and transport actions where the platform supports them.
 
 ### Player controls
-- VLC-inspired transport controls, keyboard shortcuts, and a smoother draggable seek bar.
+- VLC-inspired audio transport and YouTube-style video controls, with keyboard shortcuts and a precise draggable red seek timeline.
+- Video controls float over the picture with play/pause, 10-second skip, volume, captions, settings, mini-player, theater mode, and fullscreen; controls fade while video plays and return on pointer movement or pause.
 - Played and buffered progress, hover time preview, and responsive playhead updates.
 - 10-second skip controls, playback speed, repeat, shuffle, and A–B looping.
 - Frame stepping for video, aspect-ratio selection, and fullscreen controls that hide after inactivity.
