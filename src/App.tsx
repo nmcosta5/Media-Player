@@ -111,7 +111,7 @@ useEffect(()=>{if(!playing)return;let frame=0,last=0;const tick=(now:number)=>{i
  const titleFor=(item:Item)=>item.info?.title||item.name.replace(/\.[^.]+$/,"");
  const statusText=scanProgress||"Ready";
  const lyricsLines=useMemo(()=>{const synced=parseLrc(lyricsData?.syncedLyrics||"");if(lyricsMode==="synced"&&synced.some(line=>line.time!==null))return synced;return parseLrc(lyricsData?.plainLyrics||lyricsData?.syncedLyrics||"");},[lyricsData,lyricsMode]);
- const lyricsSyncKey=active?[active.info?.title||active.name.replace(/\\.[^.]+$/,""),active.info?.artist||"",active.info?.album||""].map(value=>value.trim().toLocaleLowerCase()).join("|"):"";
+ const lyricsSyncKey=active?[active.info?.title||active.name.replace(/\.[^.]+$/,""),active.info?.artist||"",active.info?.album||""].map(value=>value.trim().toLocaleLowerCase()).join("|"):"";
  const lyricOffset=lyricsOffsets[lyricsSyncKey]??0;
  const lyricPlaybackPosition=Math.max(0,position-lyricOffset);
  let currentLyricIndex=-1;for(let index=0;index<lyricsLines.length;index++){if(lyricsLines[index].time!==null&&lyricsLines[index].time!<=lyricPlaybackPosition)currentLyricIndex=index;}
