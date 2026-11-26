@@ -322,7 +322,7 @@ app.whenReady().then(async () => {
   const template: Electron.MenuItemConstructorOptions[] = [
     { label: "File", submenu: [
       { label: "Open file…", accelerator: "CmdOrCtrl+O", click: () => mainWindow?.webContents.send("menu:open") },
-      { label: "Open folder / scan…", accelerator: "CmdOrCtrl+Shift+O", click: () => mainWindow?.webContents.send("menu:open-folder") },
+      { label: "Open folder…", accelerator: "CmdOrCtrl+Shift+O", click: () => mainWindow?.webContents.send("menu:open-folder") },
       { label: "Open multiple files…", accelerator: "CmdOrCtrl+Alt+O", click: () => mainWindow?.webContents.send("menu:open-multiple") },
       { type: "separator" }, { role: "quit" }
     ]},
