@@ -34,3 +34,5 @@
 .lyrics-empty .open-button:hover{background:#45e982}
 .lyrics-footer{display:flex;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid #ffffff20;color:#d2ddd6;font:9px var(--mono)}
 @media(max-width:680px){.lyrics-stage{padding:15px}.lyrics-header{grid-template-columns:auto 1fr;gap:10px}.lyrics-heading{grid-column:1/-1;grid-row:1;text-align:left}.lyrics-heading h2{max-width:70vw}.lyrics-back{grid-column:1;grid-row:2}.lyrics-actions{grid-column:2;grid-row:2}.lyric-line{font-size:clamp(19px,5vw,28px)}.lyrics-scroll{gap:16px;padding-top:45px}.lyrics-footer{font-size:8px}.lyrics-footer span:last-child{text-align:right}}
+
+/* Build validation: lyrics panel refinements are included in this Windows CI run. */
