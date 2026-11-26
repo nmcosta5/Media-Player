@@ -1,0 +1,36 @@
+/* Spotify-inspired full-stage lyrics experience */
+.lyrics-stage{position:absolute;inset:0;z-index:4;isolation:isolate;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;padding:clamp(18px,3vw,38px);background:#101b19;color:#fff}
+.lyrics-art-backdrop{position:absolute;z-index:-3;inset:-8%;background-position:center;background-size:cover;filter:blur(48px) saturate(1.25);opacity:.48;transform:scale(1.12);transition:background-image .35s ease}
+.lyrics-vignette{position:absolute;z-index:-2;inset:0;background:linear-gradient(180deg,rgba(10,18,16,.65),rgba(10,18,16,.82) 45%,#0b100f 100%),linear-gradient(90deg,#0b100f88,transparent 45%,#0b100f88)}
+.lyrics-header{position:relative;display:grid;grid-template-columns:1fr minmax(180px,2fr) 1fr;align-items:center;gap:18px;padding:0 0 20px;border-bottom:1px solid #ffffff20}
+.lyrics-back{justify-self:start;display:flex;align-items:center;gap:6px;padding:8px 10px;border:1px solid #ffffff25;border-radius:999px;background:#ffffff12;color:#fff;font-size:11px;backdrop-filter:blur(12px)}
+.lyrics-back:hover{background:#ffffff25}
+.lyrics-heading{min-width:0;text-align:center}
+.lyrics-heading>span{display:block;color:#d1e2d9;font:700 9px var(--mono);letter-spacing:1.8px}
+.lyrics-heading h2{margin:6px 0 3px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#fff;font:800 clamp(17px,2.1vw,25px) Manrope,sans-serif;letter-spacing:-.5px}
+.lyrics-heading p{margin:0;color:#d0d9d4;font-size:11px}
+.lyrics-actions{justify-self:end;display:flex;align-items:center;gap:6px}
+.lyrics-actions button{height:31px;min-width:40px;padding:0 10px;border:1px solid #ffffff30;border-radius:999px;background:#ffffff10;color:#e3e9e5;font:700 9px var(--mono);letter-spacing:.6px;backdrop-filter:blur(12px)}
+.lyrics-actions button.selected{border-color:#fff;background:#fff;color:#14201b}
+.lyrics-actions button:hover:not(:disabled){background:#ffffff28;color:#fff}
+.lyrics-actions button.selected:hover{background:#fff;color:#14201b}
+.lyrics-actions button:disabled{opacity:.28;cursor:default}
+.lyrics-actions button:last-child{display:grid;place-items:center;min-width:32px;padding:0}
+.lyrics-content{position:relative;display:flex;flex:1;min-height:0;flex-direction:column;align-items:center;justify-content:center}
+.lyrics-scroll{width:min(900px,100%);height:100%;min-height:0;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:20px;padding:clamp(44px,8vh,92px) 18px clamp(55px,10vh,105px);scrollbar-width:none;mask-image:linear-gradient(to bottom,transparent 0,black 12%,black 88%,transparent 100%)}
+.lyrics-scroll::-webkit-scrollbar{display:none}
+.lyric-line{width:100%;max-width:860px;padding:0 8px;border:0;background:transparent;color:#ffffff85;text-align:center;font:750 clamp(21px,3.15vw,38px)/1.25 Manrope,sans-serif;letter-spacing:-1px;text-wrap:balance;opacity:.68;transform:scale(.97);transition:color .35s ease,opacity .35s ease,transform .35s ease,text-shadow .35s ease;cursor:pointer}
+.lyric-line.past{opacity:.34}
+.lyric-line.current{color:#fff;opacity:1;transform:scale(1.035);text-shadow:0 5px 35px #0009}
+.lyric-line:hover{color:#fff;opacity:1}
+.lyrics-live-status{position:absolute;bottom:15px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid #ffffff20;border-radius:999px;background:#07100dcc;color:#e2e9e5;font:9px var(--mono);letter-spacing:.8px;white-space:nowrap;backdrop-filter:blur(14px)}
+.lyrics-live-status>span:last-child{margin-left:8px;color:#aab9b1;font-variant-numeric:tabular-nums}
+.lyrics-live-dot{width:6px;height:6px;border-radius:50%;background:#1ed760;box-shadow:0 0 12px #1ed76099}
+.lyrics-empty{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;color:#d0d9d4;text-align:center}
+.lyrics-empty svg{color:#fff}
+.lyrics-empty strong{color:#fff;font:700 19px Manrope,sans-serif}
+.lyrics-empty span{max-width:400px;color:#d0d9d4;font-size:12px;line-height:1.6}
+.lyrics-empty .open-button{margin-top:5px;padding:0 17px;background:#1ed760;color:#07130b;border-radius:999px}
+.lyrics-empty .open-button:hover{background:#45e982}
+.lyrics-footer{display:flex;justify-content:space-between;gap:12px;padding-top:12px;border-top:1px solid #ffffff20;color:#d2ddd6;font:9px var(--mono)}
+@media(max-width:680px){.lyrics-stage{padding:15px}.lyrics-header{grid-template-columns:auto 1fr;gap:10px}.lyrics-heading{grid-column:1/-1;grid-row:1;text-align:left}.lyrics-heading h2{max-width:70vw}.lyrics-back{grid-column:1;grid-row:2}.lyrics-actions{grid-column:2;grid-row:2}.lyric-line{font-size:clamp(19px,5vw,28px)}.lyrics-scroll{gap:16px;padding-top:45px}.lyrics-footer{font-size:8px}.lyrics-footer span:last-child{text-align:right}}
